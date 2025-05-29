@@ -11,9 +11,12 @@
       let draggedCardNumber = null;
 
       // Initialize card counts
-      for (let i = 2; i <= 9; i++) {
-        cardCounts[i] = 10;
+      function resetCardCounts() {
+        for (let i = 2; i <= 9; i++) {
+          cardCounts[i] = 10;
+        }
       }
+      resetCardCounts();
 
       const problems = [
         { base: 2, target: 8, length: 3 },
@@ -41,7 +44,6 @@
         document.getElementById("target").textContent = target;
       };
 
-      // Optimized event handler
       const handleCellClick = (e) => {
         const cell = e.target;
         if (selectedCard !== null) {
@@ -62,7 +64,6 @@
         }
       };
 
-      // Optimized drag handlers
       const handleDragOver = (e) => {
         e.preventDefault();
         e.target.classList.add("drop-target");
@@ -94,7 +95,6 @@
           cell.className = "grid-cell w-10 h-10 flex items-center justify-center text-lg font-bold rounded-lg";
           cell.dataset.index = i;
           
-          // Add event listeners
           cell.addEventListener("click", handleCellClick);
           cell.addEventListener("dragover", handleDragOver);
           cell.addEventListener("dragleave", handleDragLeave);
@@ -129,7 +129,6 @@
           cardStack.className = "card-stack";
           cardStack.id = `stack-${i}`;
 
-          // Create only 3 visual cards instead of 5
           for (let j = 0; j < 3; j++) {
             const card = document.createElement("div");
             card.className = `card ${colors[i]}`;
@@ -137,7 +136,6 @@
             card.setAttribute("data-number", i);
             card.draggable = true;
 
-            // Optimized drag events
             card.addEventListener("dragstart", (e) => {
               if (cardCounts[i] > 0) {
                 draggedCardNumber = i;
@@ -154,7 +152,6 @@
             cardStack.appendChild(card);
           }
 
-          // Optimized click handler
           cardStack.addEventListener("click", () => {
             if (cardCounts[i] > 0) {
               document.querySelectorAll(".card-selected").forEach((c) => c.classList.remove("card-selected"));
@@ -207,7 +204,6 @@
       }
 
       function checkDiagonals(matrix, baseNumber, requiredLength) {
-        // Check main diagonals
         for (let startRow = 0; startRow <= gridSize - requiredLength; startRow++) {
           for (let startCol = 0; startCol <= gridSize - requiredLength; startCol++) {
             let consecutiveCount = 0;
@@ -222,7 +218,6 @@
           }
         }
 
-        // Check anti-diagonals
         for (let startRow = 0; startRow <= gridSize - requiredLength; startRow++) {
           for (let startCol = requiredLength - 1; startCol < gridSize; startCol++) {
             let consecutiveCount = 0;
@@ -243,17 +238,17 @@
       function clearGrid() {
         const cells = document.querySelectorAll("#grid .grid-cell");
         cells.forEach((cell) => {
-          if (cell.textContent !== "") {
-            const number = parseInt(cell.textContent);
-            cardCounts[number]++;
-          }
           cell.textContent = "";
-          cell.classList.remove("filled");
+          cell.classList.remove("filled", ...cell.classList);
+          cell.classList.add("grid-cell", "w-10", "h-10", "flex", "items-center", "justify-center", "text-lg", "font-bold", "rounded-lg");
         });
 
         selectedCard = null;
         document.querySelectorAll(".card-selected").forEach((c) => c.classList.remove("card-selected"));
 
+        // Reset card counts and recreate deck
+        resetCardCounts();
+        createDeck();
         for (let i = 2; i <= 9; i++) {
           updateCardDisplay(i);
         }
