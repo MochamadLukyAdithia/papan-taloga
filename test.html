@@ -5,8 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Papan Taloga</title>
     <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="css/index.css">
-<script src="js/index.js"></script>
+
+<style>
+        /* Custom styles for glass morphism, hover effects, gradients, and particles */
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1); /* Semi-transparent white background */
+            backdrop-filter: blur(10px); /* Blur effect for the background */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+        }
+        
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Smooth transition for hover effects */
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-15px) scale(1.02); /* Lift and scale effect on hover */
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Gradient for text color */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            /* text-fill-color: transparent; */ /* Standard property, -webkit- is for compatibility */
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3); /* Semi-transparent white particles */
+            border-radius: 50%; /* Circular particles */
+            pointer-events: none; /* Particles should not interfere with mouse events */
+            animation: float 8s infinite ease-in-out; /* Floating animation */
+        }
+        
+        /* Positioning and sizing for individual particles */
+        .particle:nth-child(1) { top: 20%; left: 20%; width: 4px; height: 4px; animation-delay: 0s; }
+        .particle:nth-child(2) { top: 60%; left: 80%; width: 6px; height: 6px; animation-delay: 2s; }
+        .particle:nth-child(3) { top: 80%; left: 30%; width: 3px; height: 3px; animation-delay: 4s; }
+        .particle:nth-child(4) { top: 30%; left: 70%; width: 5px; height: 5px; animation-delay: 1s; }
+        .particle:nth-child(5) { top: 70%; left: 10%; width: 4px; height: 4px; animation-delay: 3s; }
+        
+        .preview-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); /* Gradient background for preview cards */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+            backdrop-filter: blur(15px); /* Stronger blur for preview cards */
+        }
+        
+        .feature-icon {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%); /* Gradient background for feature icons */
+            backdrop-filter: blur(10px); /* Blur effect for feature icons */
+        }
+        
+        .step-number {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6); /* Gradient background for step numbers */
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); /* Shadow for step numbers */
+        }
+        
+        .game-preview {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); /* Gradient background for game preview area */
+            border: 2px dashed rgba(255, 255, 255, 0.3); /* Dashed border for game preview */
+        }
+
+</style>
+<script>
+    // Tailwind CSS configuration
+    tailwind.config = {
+        theme: {
+            extend: {
+                animation: { // Custom animations
+                    'float': 'float 6s ease-in-out infinite',
+                    'glow': 'glow 2s ease-in-out infinite alternate',
+                    'slide-up': 'slideUp 0.8s ease-out',
+                    'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    'bounce-slow': 'bounce 2s infinite', // Slower bounce animation
+                    'spin-slow': 'spin 3s linear infinite', // Slower spin animation
+                },
+                keyframes: { // Definitions for custom animations
+                    float: {
+                        '0%, 100%': { transform: 'translateY(0px)' },
+                        '50%': { transform: 'translateY(-20px)' }
+                    },
+                    glow: {
+                        '0%': { boxShadow: '0 0 5px rgba(59, 130, 246, 0.5)' },
+                        '100%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.6)' }
+                    },
+                    slideUp: {
+                        '0%': { transform: 'translateY(100px)', opacity: '0' },
+                        '100%': { transform: 'translateY(0)', opacity: '1' }
+                    }
+                }
+            }
+        }
+    }
+</script>
+
 </head>
 <body class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-x-hidden font-inter">
     <div class="particle"></div>
@@ -110,7 +203,7 @@
        
     </section>
 
-    <section class="py-10 px-6 sm:px-8 relative z-10">
+    <section class="py-20 px-6 sm:px-8 relative z-10">
         <div class="max-w-7xl mx-auto">
             <div class="text-center mb-16 px-4">
                 <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-6 leading-normal"> Fitur 
@@ -147,7 +240,7 @@
         </div>
     </section>
 
-    <section class="py-10 px-4 sm:px-6 relative z-10">
+    <section class="py-20 px-4 sm:px-6 relative z-10">
         <div class="max-w-6xl mx-auto">
             <div class="text-center mb-16">
                 <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-6 leading-normal"> Cara Bermain
@@ -219,9 +312,10 @@
             </div>
         </div>
     </section>
+
     <footer class="py-16 px-6 sm:px-8 bg-gradient-to-t from-indigo-950 to-transparent relative z-10">
         <div class="max-w-6xl mx-auto text-center">
-            <p class="text-gray-400 text-base sm:text-lg mb-8">© 2025 Papan Taloga</p>
+            <h3 class="text-3xl sm:text-4xl font-bold gradient-text mb-6 leading-normal">Papan Taloga</h3> <p class="text-gray-400 text-base sm:text-lg mb-8">© 2025 Papan Taloga. All rights reserved.</p>
             </div>
     </footer>
 
