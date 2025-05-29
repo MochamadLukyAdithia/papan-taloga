@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Log - Optimized</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/log.css">
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div class="container mx-auto py-8 px-4">
+      <!-- Header -->
+      <div class="text-center mb-8 fade-in">
+        <div class="glass-morphism rounded-3xl px-8 py-6 shadow-xl inline-block">
+          <div class="flex items-center justify-center gap-4 mb-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+              </svg>
+            </div>
+            <h1 class="text-3xl font-black gradient-text">Game Log</h1>
+          </div>
+          <h2 class="text-4xl font-black mb-2">
+            <span class="text-white" id="base">3</span>
+            <span class="text-xl align-super text-blue-400 font-bold">log</span>
+            <span class="text-blue-400" id="target">27</span>
+          </h2>
+          <p class="text-gray-300 text-sm">Susun angka secara diagonal untuk menyelesaikan logaritma</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col xl:flex-row items-center justify-center gap-8 max-w-6xl mx-auto">
+        <!-- Game Board -->
+        <div class="flex flex-col items-center">
+          <div class="glass-card p-6 rounded-3xl shadow-xl">
+            <div class="mb-4 text-center">
+              <h3 class="text-xl font-bold text-white mb-2">Papan Permainan</h3>
+              <p class="text-gray-300 text-sm">Susun angka basis secara diagonal</p>
+            </div>
+            <div id="grid" class="grid grid-cols-10 gap-2"></div>
+          </div>
+
+          <!-- Check Button -->
+          <button
+            onclick="checkAnswer()"
+            class="check-button text-white font-bold px-10 py-4 rounded-2xl text-lg mt-6 flex items-center gap-3"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>Cek Jawaban</span>
+          </button>
+        </div>
+
+        <!-- Cards Section -->
+        <div class="flex flex-col items-center">
+          <div class="glass-card p-6 rounded-3xl shadow-xl">
+            <div class="text-center mb-6">
+              <h3 class="text-xl font-bold text-white mb-2">Kartu Angka</h3>
+              <p class="text-gray-300 text-sm">Seret atau klik kartu untuk menempatkan</p>
+            </div>
+            <div id="deck" class="grid grid-cols-4 gap-4"></div>
+          </div>
+
+          <!-- Instructions -->
+          <div class="glass-morphism p-4 rounded-2xl mt-6 max-w-md">
+            <h4 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Cara Bermain
+            </h4>
+            <ul class="text-gray-300 text-sm space-y-1">
+              <li>• Seret kartu ke papan atau klik kartu lalu klik kotak</li>
+              <li>• Susun angka basis secara diagonal</li>
+              <li>• Panjang diagonal harus sesuai dengan eksponen</li>
+              <li>• Klik "Cek Jawaban" untuk memverifikasi</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Alert -->
+      <div
+        id="alertBox"
+        class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glass-card px-8 py-6 rounded-3xl shadow-xl text-xl text-green-400 hidden z-50 alert-animation border-2 border-green-400"
+      >
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-2xl text-white">Kerennn!</div>
+            <div class="font-medium text-green-300">Jawaban Benar!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wrong Answer Alert -->
+      <div
+        id="wrongAlertBox"
+        class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glass-card px-8 py-6 rounded-3xl shadow-xl text-xl text-red-400 hidden z-50 alert-animation border-2 border-red-400"
+      >
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-2xl text-white">Upsi!</div>
+            <div class="font-medium text-red-300">Coba Lagi!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Home Button -->
+      <div class="fixed top-6 left-6">
+        <a href="index.html" class="glass-morphism p-3 rounded-2xl flex items-center gap-2 text-white hover:scale-105 transition-transform duration-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="text-sm font-medium">Beranda</span>
+        </a>
+      </div>
+    </div>
+
+   <script src="js/log.js"></script>
+  </body>
+</html>

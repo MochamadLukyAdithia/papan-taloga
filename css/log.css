@@ -1,0 +1,197 @@
+
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      .glass-morphism {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .card-stack {
+        position: relative;
+        width: 70px;
+        height: 100px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      }
+
+      .card-stack:hover {
+        transform: translateY(-4px) scale(1.02);
+      }
+
+      .card {
+        position: absolute;
+        width: 70px;
+        height: 100px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 28px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        user-select: none;
+      }
+
+      .card::before {
+        content: attr(data-number);
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .card::after {
+        content: attr(data-number);
+        position: absolute;
+        bottom: 6px;
+        right: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        transform: rotate(180deg);
+      }
+
+      .card:nth-child(1) { z-index: 5; }
+      .card:nth-child(2) { z-index: 4; transform: translateY(2px) translateX(1px); }
+      .card:nth-child(3) { z-index: 3; transform: translateY(4px) translateX(2px); }
+      .card:nth-child(4) { z-index: 2; transform: translateY(6px) translateX(3px); }
+      .card:nth-child(5) { z-index: 1; transform: translateY(8px) translateX(4px); }
+
+      .card-selected {
+        transform: translateY(-10px) scale(1.1) !important;
+        z-index: 10 !important;
+        box-shadow: 0 15px 30px rgba(59, 130, 246, 0.5) !important;
+        border-color: rgba(59, 130, 246, 0.8) !important;
+      }
+
+      .grid-cell {
+        transition: all 0.2s ease;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .grid-cell:hover {
+        background: rgba(251, 191, 36, 0.25);
+        transform: scale(1.05);
+        border-color: rgba(251, 191, 36, 0.5);
+      }
+
+      .grid-cell.filled {
+        font-weight: 700;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Grid cell colors matching card colors */
+      .grid-cell.filled-2 {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+        border-color: #3b82f6;
+      }
+
+      .grid-cell.filled-3 {
+        background: linear-gradient(135deg, rgba(249, 115, 22, 0.3), rgba(220, 38, 38, 0.3));
+        border-color: #f97316;
+      }
+
+      .grid-cell.filled-4 {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(147, 51, 234, 0.3));
+        border-color: #a855f7;
+      }
+
+      .grid-cell.filled-5 {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(21, 128, 61, 0.3));
+        border-color: #22c55e;
+      }
+
+      .grid-cell.filled-6 {
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(14, 116, 144, 0.3));
+        border-color: #06b6d4;
+      }
+
+      .grid-cell.filled-7 {
+        background: linear-gradient(135deg, rgba(234, 179, 8, 0.3), rgba(249, 115, 22, 0.3));
+        border-color: #eab308;
+      }
+
+      .grid-cell.filled-8 {
+        background: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(225, 29, 72, 0.3));
+        border-color: #ec4899;
+      }
+
+      .grid-cell.filled-9 {
+        background: linear-gradient(135deg, rgba(75, 85, 99, 0.3), rgba(55, 65, 81, 0.3));
+        border-color: #4b5563;
+      }
+
+      .check-button {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        transition: transform 0.2s ease;
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+      }
+
+      .check-button:hover {
+        transform: translateY(-2px) scale(1.01);
+      }
+
+      .check-button:active {
+        transform: translateY(0) scale(0.99);
+      }
+
+      .alert-animation {
+        animation: alertPop 0.4s ease-out;
+      }
+
+      @keyframes alertPop {
+        0% {
+          transform: translate(-50%, -50%) scale(0.8);
+          opacity: 0;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+      }
+
+      .dragging {
+        opacity: 0.7;
+        transform: scale(1.05);
+        z-index: 1000;
+      }
+
+      .drop-target {
+        background: rgba(251, 191, 36, 0.3);
+        transform: scale(1.05);
+        border-color: rgba(251, 191, 36, 0.7);
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+   
