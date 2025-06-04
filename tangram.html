@@ -1,11 +1,557 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tangram</title>
-</head>
-<body>
-    <h1>On Progres Yak</h1>
-</body>
-</html>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Tangram Puzzle Game</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
+
+            .game-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 15px;
+                padding: 20px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            .header h1 {
+                color: #333;
+                font-size: 2.5em;
+                margin: 0;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .game-info {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding: 15px;
+                background: #f8f9fa;
+                border-radius: 10px;
+            }
+
+            .level-info {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #333;
+            }
+
+            .progress-bar {
+                width: 200px;
+                height: 10px;
+                background: #e9ecef;
+                border-radius: 5px;
+                overflow: hidden;
+            }
+
+            .progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #28a745, #20c997);
+                transition: width 0.3s ease;
+            }
+
+            .game-board {
+                display: flex;
+                gap: 30px;
+                justify-content: center;
+                align-items: flex-start;
+            }
+
+            .puzzle-area {
+                position: relative;
+                width: 400px;
+                height: 400px;
+                background: #f8f9fa;
+                border: 3px dashed #dee2e6;
+                border-radius: 15px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .target-shape {
+                position: absolute;
+                opacity: 0.3;
+                pointer-events: none;
+                z-index: 1;
+            }
+
+            .pieces-area {
+                width: 350px;
+                padding: 20px;
+                background: #f8f9fa;
+                border-radius: 15px;
+                border: 2px solid #dee2e6;
+            }
+
+            .pieces-title {
+                text-align: center;
+                font-size: 1.3em;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 20px;
+            }
+
+            .pieces-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;
+                justify-content: center;
+            }
+
+            .tangram-piece {
+                cursor: grab;
+                transition: all 0.2s ease;
+                transform-origin: center;
+                z-index: 10;
+                position: relative;
+            }
+
+            .tangram-piece:hover {
+                transform: scale(1.05);
+                filter: brightness(1.1);
+                z-index: 20;
+            }
+
+            .tangram-piece.dragging {
+                cursor: grabbing;
+                z-index: 30;
+                transform: scale(1.1);
+                filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            }
+
+            .tangram-piece.placed {
+                pointer-events: none;
+            }
+
+            .controls {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                margin-top: 20px;
+            }
+
+            .btn {
+                padding: 12px 25px;
+                border: none;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .btn-primary {
+                background: linear-gradient(45deg, #007bff, #0056b3);
+                color: white;
+            }
+
+            .btn-success {
+                background: linear-gradient(45deg, #28a745, #1e7e34);
+                color: white;
+            }
+
+            .btn-warning {
+                background: linear-gradient(45deg, #ffc107, #e0a800);
+                color: #333;
+            }
+
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            }
+
+            .level-complete {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+
+            .level-complete-content {
+                background: white;
+                padding: 40px;
+                border-radius: 20px;
+                text-align: center;
+                animation: bounceIn 0.5s ease;
+            }
+
+            @keyframes bounceIn {
+                0% { transform: scale(0.3); opacity: 0; }
+                50% { transform: scale(1.05); }
+                70% { transform: scale(0.9); }
+                100% { transform: scale(1); opacity: 1; }
+            }
+
+            .rotate-indicator {
+                position: absolute;
+                top: -30px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.7);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-size: 12px;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .tangram-piece:hover .rotate-indicator {
+                opacity: 1;
+            }
+
+            /* Responsive design */
+            @media (max-width: 768px) {
+                .game-board {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                
+                .puzzle-area, .pieces-area {
+                    width: 300px;
+                }
+                
+                .puzzle-area {
+                    height: 300px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="game-container">
+            <div class="header">
+                <h1>🧩 TANGRAM PUZZLE</h1>
+            </div>
+
+            <div class="game-info">
+                <div class="level-info">Level: <span id="currentLevel">1</span> / 10</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 10%"></div>
+                </div>
+                <div>Target: <span id="targetName">Square</span></div>
+            </div>
+
+            <div class="game-board">
+                <div class="puzzle-area" id="puzzleArea">
+                    <div class="target-shape" id="targetShape"></div>
+                </div>
+
+                <div class="pieces-area">
+                    <div class="pieces-title">Tangram Pieces</div>
+                    <div class="pieces-container" id="piecesContainer">
+                        <!-- Pieces will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-warning" onclick="resetLevel()">🔄 Reset Level</button>
+                <button class="btn btn-primary" onclick="showHint()">💡 Hint</button>
+                <button class="btn btn-success" onclick="nextLevel()" id="nextBtn" style="display: none;">➡️ Next Level</button>
+            </div>
+        </div>
+
+        <div class="level-complete" id="levelComplete">
+            <div class="level-complete-content">
+                <h2>🎉 Level Complete!</h2>
+                <p id="completeMessage">Great job! You've completed the puzzle!</p>
+                <button class="btn btn-success" onclick="continueGame()">Continue</button>
+            </div>
+        </div>
+
+        <script>
+            let currentLevel = 1;
+            let selectedPiece = null;
+            let isDragging = false;
+            let dragOffset = { x: 0, y: 0 };
+
+            // Tangram piece definitions (polygons)
+            const pieces = [
+                { id: 'large-triangle-1', color: '#FF6B6B', points: '0,0 60,0 30,30', name: 'Large Triangle 1' },
+                { id: 'large-triangle-2', color: '#4ECDC4', points: '0,0 60,0 30,30', name: 'Large Triangle 2' },
+                { id: 'medium-triangle', color: '#45B7D1', points: '0,0 42,0 21,21', name: 'Medium Triangle' },
+                { id: 'small-triangle-1', color: '#96CEB4', points: '0,0 30,0 15,15', name: 'Small Triangle 1' },
+                { id: 'small-triangle-2', color: '#FFEAA7', points: '0,0 30,0 15,15', name: 'Small Triangle 2' },
+                { id: 'square', color: '#DDA0DD', points: '0,0 21,0 21,21 0,21', name: 'Square' },
+                { id: 'parallelogram', color: '#FFB347', points: '0,0 30,0 45,15 15,15', name: 'Parallelogram' }
+            ];
+
+            // Level definitions with target shapes and solutions
+            const levels = [
+                { 
+                    name: 'Square', 
+                    target: 'M50,50 L150,50 L150,150 L50,150 Z',
+                    solution: { /* simplified for demo */ }
+                },
+                { 
+                    name: 'Triangle', 
+                    target: 'M100,40 L160,120 L40,120 Z',
+                    solution: {}
+                },
+                { 
+                    name: 'House', 
+                    target: 'M50,100 L50,150 L150,150 L150,100 L100,50 Z',
+                    solution: {}
+                },
+                { 
+                    name: 'Cat', 
+                    target: 'M60,60 L80,40 L100,60 L120,40 L140,60 L130,80 L140,100 L120,120 L100,110 L80,120 L60,100 L70,80 Z',
+                    solution: {}
+                },
+                { 
+                    name: 'Bird', 
+                    target: 'M50,80 L70,60 L90,70 L110,50 L130,60 L140,80 L130,100 L110,110 L90,100 L70,110 L50,100 Z',
+                    solution: {}
+                },
+                { 
+                    name: 'Fish', 
+                    target: 'M40,100 L60,80 L80,85 L100,70 L120,75 L140,90 L130,110 L110,120 L90,115 L70,120 L50,110 Z',
+                    solution: {}
+                },
+                { 
+                    name: 'Swan', 
+                    target: 'M60,120 L70,100 L80,80 L90,60 L110,50 L130,60 L140,80 L130,100 L120,110 L100,115 L80,110 L60,120 Z',
+                    solution: {}
+                },
+                { 
+                    name: 'Rabbit', 
+                    target: 'M70,50 L80,40 L90,50 L100,40 L110,50 L120,60 L110,80 L100,100 L90,110 L80,100 L70,80 L60,60 Z',
+                    solution: {}
+                },
+                { 
+                    name: 'Horse', 
+                    target: 'M50,110 L60,90 L70,70 L80,50 L100,45 L120,50 L130,70 L120,90 L110,100 L100,110 L90,115 L80,110 L70,105 Z',
+                    solution: {}
+                },
+                { 
+                    name: 'Goose', 
+                    target: 'M60,100 L70,80 L80,60 L100,55 L120,60 L130,80 L140,100 L130,115 L110,120 L90,115 L70,110 Z',
+                    solution: {}
+                }
+            ];
+
+            function initGame() {
+                createPieces();
+                loadLevel(currentLevel);
+            }
+
+            function createPieces() {
+                const container = document.getElementById('piecesContainer');
+                container.innerHTML = '';
+
+                pieces.forEach((piece, index) => {
+                    const pieceElement = document.createElement('div');
+                    pieceElement.className = 'tangram-piece';
+                    pieceElement.id = piece.id;
+                    pieceElement.style.position = 'relative';
+                    pieceElement.innerHTML = `
+                        <div class="rotate-indicator">Right-click to rotate</div>
+                        <svg width="60" height="60" viewBox="0 0 60 60">
+                            <polygon points="${piece.points}" 
+                                    fill="${piece.color}" 
+                                    stroke="#333" 
+                                    stroke-width="2"/>
+                        </svg>
+                    `;
+
+                    // Add event listeners
+                    pieceElement.addEventListener('mousedown', startDrag);
+                    pieceElement.addEventListener('contextmenu', rotatePiece);
+                    
+                    container.appendChild(pieceElement);
+                });
+            }
+
+            function loadLevel(level) {
+                const levelData = levels[level - 1];
+                document.getElementById('currentLevel').textContent = level;
+                document.getElementById('targetName').textContent = levelData.name;
+                document.getElementById('progressFill').style.width = (level / 10) * 100 + '%';
+
+                // Create target shape
+                const targetShape = document.getElementById('targetShape');
+                targetShape.innerHTML = `
+                    <svg width="200" height="200" viewBox="0 0 200 200">
+                        <path d="${levelData.target}" 
+                            fill="none" 
+                            stroke="#333" 
+                            stroke-width="3" 
+                            stroke-dasharray="5,5"/>
+                    </svg>
+                `;
+
+                // Reset pieces to original positions
+                resetLevel();
+            }
+
+            function startDrag(e) {
+                e.preventDefault();
+                selectedPiece = e.currentTarget;
+                isDragging = true;
+                selectedPiece.classList.add('dragging');
+
+                const rect = selectedPiece.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+            }
+
+            function drag(e) {
+                if (!isDragging || !selectedPiece) return;
+
+                const puzzleArea = document.getElementById('puzzleArea');
+                const puzzleRect = puzzleArea.getBoundingClientRect();
+
+                selectedPiece.style.position = 'absolute';
+                selectedPiece.style.left = (e.clientX - dragOffset.x) + 'px';
+                selectedPiece.style.top = (e.clientY - dragOffset.y) + 'px';
+                selectedPiece.style.zIndex = '30';
+            }
+
+            function stopDrag(e) {
+                if (!isDragging) return;
+
+                const puzzleArea = document.getElementById('puzzleArea');
+                const puzzleRect = puzzleArea.getBoundingClientRect();
+                const pieceRect = selectedPiece.getBoundingClientRect();
+
+                // Check if piece is dropped in puzzle area
+                if (pieceRect.left >= puzzleRect.left && 
+                    pieceRect.right <= puzzleRect.right &&
+                    pieceRect.top >= puzzleRect.top && 
+                    pieceRect.bottom <= puzzleRect.bottom) {
+                    
+                    // Convert to puzzle area coordinates
+                    const relativeX = pieceRect.left - puzzleRect.left;
+                    const relativeY = pieceRect.top - puzzleRect.top;
+                    
+                    selectedPiece.style.left = relativeX + 'px';
+                    selectedPiece.style.top = relativeY + 'px';
+                    
+                    puzzleArea.appendChild(selectedPiece);
+                    
+                    // Check if level is complete
+                    setTimeout(checkLevelComplete, 100);
+                }
+
+                selectedPiece.classList.remove('dragging');
+                selectedPiece = null;
+                isDragging = false;
+
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+
+            function rotatePiece(e) {
+                e.preventDefault();
+                const piece = e.currentTarget;
+                const svg = piece.querySelector('svg');
+                
+                // Get current rotation or default to 0
+                let currentRotation = parseInt(piece.dataset.rotation || '0');
+                currentRotation = (currentRotation + 45) % 360;
+                piece.dataset.rotation = currentRotation;
+                
+                svg.style.transform = `rotate(${currentRotation}deg)`;
+                svg.style.transition = 'transform 0.3s ease';
+            }
+
+            function checkLevelComplete() {
+                const puzzleArea = document.getElementById('puzzleArea');
+                const piecesInPuzzle = puzzleArea.querySelectorAll('.tangram-piece');
+                
+                // Simple completion check - if all 7 pieces are in puzzle area
+                if (piecesInPuzzle.length === 7) {
+                    showLevelComplete();
+                }
+            }
+
+            function showLevelComplete() {
+                const modal = document.getElementById('levelComplete');
+                const message = document.getElementById('completeMessage');
+                
+                if (currentLevel === 10) {
+                    message.textContent = '🎊 Congratulations! You\'ve completed all levels!';
+                } else {
+                    message.textContent = `Great job! Level ${currentLevel} completed!`;
+                }
+                
+                modal.style.display = 'flex';
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            }
+
+            function continueGame() {
+                document.getElementById('levelComplete').style.display = 'none';
+                if (currentLevel < 10) {
+                    nextLevel();
+                } else {
+                    // Game completed
+                    alert('🎉 Congratulations! You\'ve mastered all Tangram puzzles!');
+                    currentLevel = 1;
+                    loadLevel(currentLevel);
+                }
+            }
+
+            function nextLevel() {
+                if (currentLevel < 10) {
+                    currentLevel++;
+                    loadLevel(currentLevel);
+                    document.getElementById('nextBtn').style.display = 'none';
+                }
+            }
+
+            function resetLevel() {
+                const piecesContainer = document.getElementById('piecesContainer');
+                const puzzleArea = document.getElementById('puzzleArea');
+                
+                // Move all pieces back to pieces container
+                const allPieces = document.querySelectorAll('.tangram-piece');
+                allPieces.forEach(piece => {
+                    piece.style.position = 'relative';
+                    piece.style.left = 'auto';
+                    piece.style.top = 'auto';
+                    piece.style.zIndex = '10';
+                    piece.dataset.rotation = '0';
+                    piece.querySelector('svg').style.transform = 'rotate(0deg)';
+                    piece.classList.remove('placed', 'dragging');
+                    piecesContainer.appendChild(piece);
+                });
+                
+                document.getElementById('nextBtn').style.display = 'none';
+            }
+
+            function showHint() {
+                alert('💡 Hint: Try rotating pieces with right-click and look for matching edges and corners!');
+            }
+            
+            // Initialize game when page loads
+            window.addEventListener('load', initGame);
+
+            // Prevent default drag behavior on images
+            document.addEventListener('dragstart', e => e.preventDefault());
+        </script>
+    </body>
+    </html>
