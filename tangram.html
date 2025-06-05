@@ -28,107 +28,128 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.0.2/svg.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
      <script src="https://cdn.tailwindcss.com"></script>
-    <!-- <script src="js/svg.select.min.js"></script>
-        <script src="js/svg.draggy.js"></script>
-        <script src="js/css.rotate.js"></script>
-        <script src="js/crossy.js"></script>
-        <script src="js/index.js"></script> -->
-
-    <style>
-   .graph {
-    margin-top: 15vh;
-  z-index: 9;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.title {
-  position: fixed;
-  z-index: 10;
-  pointer-events: none;
-  color: #1e293b; /* slate-800 */
-  left: 55px;
-  border: 5px solid #64748b; /* slate-500 */
-  padding-bottom: 3px;
-  top: -5px;
-  padding-right: 20px;
-}
-
-.title h1 {
-  display: inline;
-  padding: 0px;
-  padding-left: 20px;
-}
-
-polygon {
-  transition: all 0.5s ease;
-  cursor: pointer;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-.sidebar {
-  background: #334155; /* slate-700 */
-  position: fixed;
-  z-index: 999;
-}
-
-.sidebar span.octicon {
-  font-size: 40px;
-  color: #f8fafc; /* slate-50 */
-  padding: 14px;
-}
-
-.sidebar-item {
-  text-align: center;
-  border-bottom: 5px solid #475569; /* slate-600 */
-  cursor: pointer;
-}
-
-.sidebar-item:hover {
-  background: #475569; /* slate-600 */
-}
-
-.made-with-heart a,
-.made-with-heart a:hover {
-  color: #475569;
-}
-
-.made-with-heart a:hover {
-  text-decoration: underline;
-}
-
-    </style>
-  </head>
-  <body>
-   
-    <div class="flex">
-  <!-- Konten utama -->
-  <div class="flex-1">
-    <div class="graph"></div>
-    <div class="sidebar">
-      <div class="sidebar-item" onclick="showTutorial()">
-        <span class="octicon octicon-question"></span>
-      </div>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 5px rgba(59, 130, 246, 0.5)' },
+                            '50%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        }
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-purple-800 via-purple-700 to-purple-600 min-h-screen overflow-hidden">
+    
+    <!-- Background Pattern -->
+    <div class="fixed inset-0 opacity-10">
+        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);"></div>
     </div>
-   
-  </div>
-  
-  <!-- Gambar fixed di kanan -->
-  <div class="fixed right-0 top-0 h-full w-[400px] flex items-center justify-center">
-    <img 
-      src="assets/images/example.png" 
-      alt="Example Image" 
-      class="w-full h-auto max-w-[400px] max-h-[400px] object-contain"
-    />
-  </div>
-</div>
+
+    <div class="flex relative z-10">
+        <!-- Main Content Area -->
+        <div class="flex-1 relative">
+            <!-- Modern Graph Container -->
+            <div class="graph fixed inset-0 z-20 bg-black/10 backdrop-blur-xs">
+              
+            </div>
+
+            <!-- Modern Title -->
+            <div class="fixed top-6 left-16 z-30 pointer-events-none animate-slide-up">
+                <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-6 py-3 shadow-2xl">
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        Tangram Taloga
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Modern Sidebar -->
+            <div class="sidebar fixed left-0 top-0 h-full w-20 bg-slate-800/90 backdrop-blur-md border-r border-white/10 z-50 shadow-2xl">
+                <div class="flex flex-col h-full">
+                    <!-- Tutorial Button -->
+                    <div class="sidebar-item flex-shrink-0 flex items-center justify-center h-20 border-b border-slate-600/50 cursor-pointer group hover:bg-slate-700/50 transition-all duration-300 animate-fade-in" onclick="showTutorial()">
+                        <div class="relative">
+                            <span class="text-4xl text-slate-200 group-hover:text-blue-400 transition-colors duration-300 animate-float">?</span>
+                            <div class="absolute -inset-2 bg-blue-500/20 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-pulse-glow transition-opacity duration-300"></div>
+                        </div>
+                        <!-- Tooltip -->
+                        <div class="absolute left-24 bg-slate-800 text-white px-3 py-2 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap shadow-xl border border-slate-600">
+                            Show Tutorial
+                            <div class="absolute left-0 top-1/2 transform -translate-x-2 -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-slate-800"></div>
+                        </div>
+                    </div>
+                    
+                 
+
+                  
+
+                    <!-- Spacer -->
+                    <div class="flex-1"></div>
+
+                  
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modern Fixed Image Container -->
+        <div class="fixed right-6 top-1/2 transform -translate-y-1/2 w-[300px] h-[300px] z-40 animate-slide-up" style="animation-delay: 0.4s">
+            <div class="relative w-full h-full">
+                <!-- Glowing background -->
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl blur-xl animate-pulse-glow"></div>
+                
+                <!-- Main container -->
+                <div class="relative w-full h-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl overflow-hidden group hover:scale-105 transition-transform duration-500">
+                    <!-- Image -->
+                    <img 
+                        src="assets/images/example.png" 
+                        alt="Example Image" 
+                        class="w-full h-full object-cover group-hover:scale-100 transition-transform duration-700"
+                    />
+                    
+                    <!-- Overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tutorial Modal (Hidden by default) -->
+    <div id="tutorialModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] hidden items-center justify-center">
+        <div class="bg-slate-800 rounded-2xl p-8 m-4 max-w-md w-full shadow-2xl border border-slate-600 animate-slide-up">
+            <h2 class="text-2xl font-bold text-white mb-4">Tutorial</h2>
+           
+            <button onclick="hideTutorial()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition-colors duration-300 font-medium">
+                Got it!
+            </button>
+        </div>
+    </div>
 </body>
   <!-- <script src="js/svg.select.min.js"></script>
         <script src="js/svg.draggy.js"></script>
@@ -975,13 +996,13 @@ ul {
           elements.group(),
           elements.group(),
         ],
-        size = winSize.w / 3.5,
+        size = winSize.w / 5,
         half = size / 2,
         quart = half / 2,
         q3 = quart * 3,
         leftTopCorner = {
-          x: winSize.w / 2 - size / 2,
-          y: 30,
+          x: winSize.w / 2 - size / 2 - 200,
+          y: 160,
         };
       // 1. Big Triangle
       shapes[0]
