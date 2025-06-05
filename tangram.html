@@ -27,6 +27,7 @@
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.0.2/svg.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+     <script src="https://cdn.tailwindcss.com"></script>
     <!-- <script src="js/svg.select.min.js"></script>
         <script src="js/svg.draggy.js"></script>
         <script src="js/css.rotate.js"></script>
@@ -34,87 +35,101 @@
         <script src="js/index.js"></script> -->
 
     <style>
-      .graph {
-        z-index: 9;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-      }
+   .graph {
+    margin-top: 15vh;
+  z-index: 9;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
 
-      .title {
-        position: fixed;
-        z-index: 10;
-        pointer-events: none;
-        color: #2d8bc9;
-        left: 55px;
-        border: 5px solid;
-        padding-bottom: 3px;
-        top: -5px;
-        padding-right: 20px;
-      }
+.title {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+  color: #1e293b; /* slate-800 */
+  left: 55px;
+  border: 5px solid #64748b; /* slate-500 */
+  padding-bottom: 3px;
+  top: -5px;
+  padding-right: 20px;
+}
 
-      .title h1 {
-        display: inline;
-        padding: 0px;
-        padding-left: 20px;
-      }
+.title h1 {
+  display: inline;
+  padding: 0px;
+  padding-left: 20px;
+}
 
-      polygon {
-        -webkit-transition: all 0.5s ease;
-        -moz-transition: all 0.5s ease;
-        -ms-transition: all 0.5s ease;
-        -o-transition: all 0.5s ease;
-        transition: all 0.5s ease;
-        cursor: pointer;
-      }
+polygon {
+  transition: all 0.5s ease;
+  cursor: pointer;
+}
 
-      ul {
-        list-style: none;
-        padding: 0;
-      }
-      .sidebar {
-        background: #3498db;
-        position: fixed;
-        z-index: 999;
-      }
+ul {
+  list-style: none;
+  padding: 0;
+}
 
-      .sidebar span.octicon {
-        font-size: 40px;
-        color: #fff;
-        padding: 14px;
-      }
+.sidebar {
+  background: #334155; /* slate-700 */
+  position: fixed;
+  z-index: 999;
+}
 
-      .sidebar-item {
-        text-align: center;
-        border-bottom: 5px solid #2d8bc9;
-        cursor: pointer;
-      }
+.sidebar span.octicon {
+  font-size: 40px;
+  color: #f8fafc; /* slate-50 */
+  padding: 14px;
+}
 
-      .sidebar-item:hover {
-        background: #2d8bc9;
-      }
+.sidebar-item {
+  text-align: center;
+  border-bottom: 5px solid #475569; /* slate-600 */
+  cursor: pointer;
+}
 
-      .made-with-heart a,
-      .made-with-heart a:hover {
-        color: #2d8bc9;
-      }
+.sidebar-item:hover {
+  background: #475569; /* slate-600 */
+}
 
-      .made-with-heart a:hover {
-        text-decoration: underline;
-      }
+.made-with-heart a,
+.made-with-heart a:hover {
+  color: #475569;
+}
+
+.made-with-heart a:hover {
+  text-decoration: underline;
+}
+
     </style>
   </head>
   <body>
    
+    <div class="flex">
+  <!-- Konten utama -->
+  <div class="flex-1">
     <div class="graph"></div>
     <div class="sidebar">
       <div class="sidebar-item" onclick="showTutorial()">
         <span class="octicon octicon-question"></span>
       </div>
     </div>
-  </body>
+   
+  </div>
+  
+  <!-- Gambar fixed di kanan -->
+  <div class="fixed right-0 top-0 h-full w-[400px] flex items-center justify-center">
+    <img 
+      src="assets/images/example.png" 
+      alt="Example Image" 
+      class="w-full h-auto max-w-[400px] max-h-[400px] object-contain"
+    />
+  </div>
+</div>
+</body>
   <!-- <script src="js/svg.select.min.js"></script>
         <script src="js/svg.draggy.js"></script>
         <script src="js/css.rotate.js"></script>
