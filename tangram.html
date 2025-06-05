@@ -1,557 +1,1085 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Tangram Puzzle Game</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 20px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                min-height: 100vh;
-            }
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>Tangram</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/caiuss/1.0.2/caiuss.min.css"
+      type="text/css"
+      media="screen"
+      charset="utf-8"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css"
+      type="text/css"
+      media="screen"
+      charset="utf-8"
+    />
+    <!-- <link rel="stylesheet" href="css/style.css" type="text/css" media="screen" charset="utf-8"> -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/octicons/3.5.0/octicons.min.css"
+      type="text/css"
+      media="screen"
+      charset="utf-8"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.0.2/svg.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+    <!-- <script src="js/svg.select.min.js"></script>
+        <script src="js/svg.draggy.js"></script>
+        <script src="js/css.rotate.js"></script>
+        <script src="js/crossy.js"></script>
+        <script src="js/index.js"></script> -->
 
-            .game-container {
-                max-width: 1200px;
-                margin: 0 auto;
-                background: white;
-                border-radius: 15px;
-                padding: 20px;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            }
+    <style>
+      .graph {
+        z-index: 9;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
 
-            .header {
-                text-align: center;
-                margin-bottom: 30px;
-            }
+      .title {
+        position: fixed;
+        z-index: 10;
+        pointer-events: none;
+        color: #2d8bc9;
+        left: 55px;
+        border: 5px solid;
+        padding-bottom: 3px;
+        top: -5px;
+        padding-right: 20px;
+      }
 
-            .header h1 {
-                color: #333;
-                font-size: 2.5em;
-                margin: 0;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            }
+      .title h1 {
+        display: inline;
+        padding: 0px;
+        padding-left: 20px;
+      }
 
-            .game-info {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
-                padding: 15px;
-                background: #f8f9fa;
-                border-radius: 10px;
-            }
+      polygon {
+        -webkit-transition: all 0.5s ease;
+        -moz-transition: all 0.5s ease;
+        -ms-transition: all 0.5s ease;
+        -o-transition: all 0.5s ease;
+        transition: all 0.5s ease;
+        cursor: pointer;
+      }
 
-            .level-info {
-                font-size: 1.2em;
-                font-weight: bold;
-                color: #333;
-            }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      .sidebar {
+        background: #3498db;
+        position: fixed;
+        z-index: 999;
+      }
 
-            .progress-bar {
-                width: 200px;
-                height: 10px;
-                background: #e9ecef;
-                border-radius: 5px;
-                overflow: hidden;
-            }
+      .sidebar span.octicon {
+        font-size: 40px;
+        color: #fff;
+        padding: 14px;
+      }
 
-            .progress-fill {
-                height: 100%;
-                background: linear-gradient(90deg, #28a745, #20c997);
-                transition: width 0.3s ease;
-            }
+      .sidebar-item {
+        text-align: center;
+        border-bottom: 5px solid #2d8bc9;
+        cursor: pointer;
+      }
 
-            .game-board {
-                display: flex;
-                gap: 30px;
-                justify-content: center;
-                align-items: flex-start;
-            }
+      .sidebar-item:hover {
+        background: #2d8bc9;
+      }
 
-            .puzzle-area {
-                position: relative;
-                width: 400px;
-                height: 400px;
-                background: #f8f9fa;
-                border: 3px dashed #dee2e6;
-                border-radius: 15px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+      .made-with-heart a,
+      .made-with-heart a:hover {
+        color: #2d8bc9;
+      }
 
-            .target-shape {
-                position: absolute;
-                opacity: 0.3;
-                pointer-events: none;
-                z-index: 1;
-            }
-
-            .pieces-area {
-                width: 350px;
-                padding: 20px;
-                background: #f8f9fa;
-                border-radius: 15px;
-                border: 2px solid #dee2e6;
-            }
-
-            .pieces-title {
-                text-align: center;
-                font-size: 1.3em;
-                font-weight: bold;
-                color: #333;
-                margin-bottom: 20px;
-            }
-
-            .pieces-container {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 15px;
-                justify-content: center;
-            }
-
-            .tangram-piece {
-                cursor: grab;
-                transition: all 0.2s ease;
-                transform-origin: center;
-                z-index: 10;
-                position: relative;
-            }
-
-            .tangram-piece:hover {
-                transform: scale(1.05);
-                filter: brightness(1.1);
-                z-index: 20;
-            }
-
-            .tangram-piece.dragging {
-                cursor: grabbing;
-                z-index: 30;
-                transform: scale(1.1);
-                filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
-            }
-
-            .tangram-piece.placed {
-                pointer-events: none;
-            }
-
-            .controls {
-                display: flex;
-                gap: 10px;
-                justify-content: center;
-                margin-top: 20px;
-            }
-
-            .btn {
-                padding: 12px 25px;
-                border: none;
-                border-radius: 25px;
-                font-size: 16px;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            .btn-primary {
-                background: linear-gradient(45deg, #007bff, #0056b3);
-                color: white;
-            }
-
-            .btn-success {
-                background: linear-gradient(45deg, #28a745, #1e7e34);
-                color: white;
-            }
-
-            .btn-warning {
-                background: linear-gradient(45deg, #ffc107, #e0a800);
-                color: #333;
-            }
-
-            .btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            }
-
-            .level-complete {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.8);
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-            }
-
-            .level-complete-content {
-                background: white;
-                padding: 40px;
-                border-radius: 20px;
-                text-align: center;
-                animation: bounceIn 0.5s ease;
-            }
-
-            @keyframes bounceIn {
-                0% { transform: scale(0.3); opacity: 0; }
-                50% { transform: scale(1.05); }
-                70% { transform: scale(0.9); }
-                100% { transform: scale(1); opacity: 1; }
-            }
-
-            .rotate-indicator {
-                position: absolute;
-                top: -30px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0,0,0,0.7);
-                color: white;
-                padding: 5px 10px;
-                border-radius: 15px;
-                font-size: 12px;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            .tangram-piece:hover .rotate-indicator {
-                opacity: 1;
-            }
-
-            /* Responsive design */
-            @media (max-width: 768px) {
-                .game-board {
-                    flex-direction: column;
-                    align-items: center;
-                }
-                
-                .puzzle-area, .pieces-area {
-                    width: 300px;
-                }
-                
-                .puzzle-area {
-                    height: 300px;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="game-container">
-            <div class="header">
-                <h1>🧩 TANGRAM PUZZLE</h1>
-            </div>
-
-            <div class="game-info">
-                <div class="level-info">Level: <span id="currentLevel">1</span> / 10</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill" style="width: 10%"></div>
-                </div>
-                <div>Target: <span id="targetName">Square</span></div>
-            </div>
-
-            <div class="game-board">
-                <div class="puzzle-area" id="puzzleArea">
-                    <div class="target-shape" id="targetShape"></div>
-                </div>
-
-                <div class="pieces-area">
-                    <div class="pieces-title">Tangram Pieces</div>
-                    <div class="pieces-container" id="piecesContainer">
-                        <!-- Pieces will be generated here -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="controls">
-                <button class="btn btn-warning" onclick="resetLevel()">🔄 Reset Level</button>
-                <button class="btn btn-primary" onclick="showHint()">💡 Hint</button>
-                <button class="btn btn-success" onclick="nextLevel()" id="nextBtn" style="display: none;">➡️ Next Level</button>
-            </div>
-        </div>
-
-        <div class="level-complete" id="levelComplete">
-            <div class="level-complete-content">
-                <h2>🎉 Level Complete!</h2>
-                <p id="completeMessage">Great job! You've completed the puzzle!</p>
-                <button class="btn btn-success" onclick="continueGame()">Continue</button>
-            </div>
-        </div>
-
-        <script>
-            let currentLevel = 1;
-            let selectedPiece = null;
-            let isDragging = false;
-            let dragOffset = { x: 0, y: 0 };
-
-            // Tangram piece definitions (polygons)
-            const pieces = [
-                { id: 'large-triangle-1', color: '#FF6B6B', points: '0,0 60,0 30,30', name: 'Large Triangle 1' },
-                { id: 'large-triangle-2', color: '#4ECDC4', points: '0,0 60,0 30,30', name: 'Large Triangle 2' },
-                { id: 'medium-triangle', color: '#45B7D1', points: '0,0 42,0 21,21', name: 'Medium Triangle' },
-                { id: 'small-triangle-1', color: '#96CEB4', points: '0,0 30,0 15,15', name: 'Small Triangle 1' },
-                { id: 'small-triangle-2', color: '#FFEAA7', points: '0,0 30,0 15,15', name: 'Small Triangle 2' },
-                { id: 'square', color: '#DDA0DD', points: '0,0 21,0 21,21 0,21', name: 'Square' },
-                { id: 'parallelogram', color: '#FFB347', points: '0,0 30,0 45,15 15,15', name: 'Parallelogram' }
-            ];
-
-            // Level definitions with target shapes and solutions
-            const levels = [
-                { 
-                    name: 'Square', 
-                    target: 'M50,50 L150,50 L150,150 L50,150 Z',
-                    solution: { /* simplified for demo */ }
-                },
-                { 
-                    name: 'Triangle', 
-                    target: 'M100,40 L160,120 L40,120 Z',
-                    solution: {}
-                },
-                { 
-                    name: 'House', 
-                    target: 'M50,100 L50,150 L150,150 L150,100 L100,50 Z',
-                    solution: {}
-                },
-                { 
-                    name: 'Cat', 
-                    target: 'M60,60 L80,40 L100,60 L120,40 L140,60 L130,80 L140,100 L120,120 L100,110 L80,120 L60,100 L70,80 Z',
-                    solution: {}
-                },
-                { 
-                    name: 'Bird', 
-                    target: 'M50,80 L70,60 L90,70 L110,50 L130,60 L140,80 L130,100 L110,110 L90,100 L70,110 L50,100 Z',
-                    solution: {}
-                },
-                { 
-                    name: 'Fish', 
-                    target: 'M40,100 L60,80 L80,85 L100,70 L120,75 L140,90 L130,110 L110,120 L90,115 L70,120 L50,110 Z',
-                    solution: {}
-                },
-                { 
-                    name: 'Swan', 
-                    target: 'M60,120 L70,100 L80,80 L90,60 L110,50 L130,60 L140,80 L130,100 L120,110 L100,115 L80,110 L60,120 Z',
-                    solution: {}
-                },
-                { 
-                    name: 'Rabbit', 
-                    target: 'M70,50 L80,40 L90,50 L100,40 L110,50 L120,60 L110,80 L100,100 L90,110 L80,100 L70,80 L60,60 Z',
-                    solution: {}
-                },
-                { 
-                    name: 'Horse', 
-                    target: 'M50,110 L60,90 L70,70 L80,50 L100,45 L120,50 L130,70 L120,90 L110,100 L100,110 L90,115 L80,110 L70,105 Z',
-                    solution: {}
-                },
-                { 
-                    name: 'Goose', 
-                    target: 'M60,100 L70,80 L80,60 L100,55 L120,60 L130,80 L140,100 L130,115 L110,120 L90,115 L70,110 Z',
-                    solution: {}
-                }
-            ];
-
-            function initGame() {
-                createPieces();
-                loadLevel(currentLevel);
-            }
-
-            function createPieces() {
-                const container = document.getElementById('piecesContainer');
-                container.innerHTML = '';
-
-                pieces.forEach((piece, index) => {
-                    const pieceElement = document.createElement('div');
-                    pieceElement.className = 'tangram-piece';
-                    pieceElement.id = piece.id;
-                    pieceElement.style.position = 'relative';
-                    pieceElement.innerHTML = `
-                        <div class="rotate-indicator">Right-click to rotate</div>
-                        <svg width="60" height="60" viewBox="0 0 60 60">
-                            <polygon points="${piece.points}" 
-                                    fill="${piece.color}" 
-                                    stroke="#333" 
-                                    stroke-width="2"/>
-                        </svg>
-                    `;
-
-                    // Add event listeners
-                    pieceElement.addEventListener('mousedown', startDrag);
-                    pieceElement.addEventListener('contextmenu', rotatePiece);
-                    
-                    container.appendChild(pieceElement);
+      .made-with-heart a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+   
+    <div class="graph"></div>
+    <div class="sidebar">
+      <div class="sidebar-item" onclick="showTutorial()">
+        <span class="octicon octicon-question"></span>
+      </div>
+    </div>
+  </body>
+  <!-- <script src="js/svg.select.min.js"></script>
+        <script src="js/svg.draggy.js"></script>
+        <script src="js/css.rotate.js"></script>
+        <script src="js/crossy.js"></script>
+        <script src="js/index.js"></script> -->
+  <script>
+    /*! svg.select.js - v1.0.5 - 2015-06-26
+     * https://github.com/Fuzzyma/svg.select.js
+     * Copyright (c) 2015 Ulrich-Matthias Schäfer; Licensed MIT */
+    (function (a) {
+      function b(a) {
+        (this.el = a),
+          (this.parent = a.parent(SVG.Nested) || a.parent(SVG.Doc)),
+          a.remember("_selectHandler", this),
+          (this.pointSelection = { isSelected: !1 }),
+          (this.rectSelection = { isSelected: !1 });
+      }
+      (b.prototype.init = function (b, c) {
+        var d = this.el.bbox();
+        this.options = {};
+        for (var e in this.el.select.defaults)
+          (this.options[e] = this.el.select.defaults[e]),
+            c[e] !== a && (this.options[e] = c[e]);
+        (this.nested = (this.nested || this.parent.nested())
+          .size(d.width || 1, d.height || 1)
+          .transform(this.el.ctm())
+          .move(d.x, d.y)),
+          this.options.deepSelect &&
+          -1 !== ["line", "polyline", "polygon"].indexOf(this.el.type)
+            ? this.selectPoints(b)
+            : this.selectRect(b),
+          this.observe(),
+          this.cleanup();
+      }),
+        (b.prototype.selectPoints = function (a) {
+          return (
+            (this.pointSelection.isSelected = a),
+            this.pointSelection.set
+              ? this
+              : ((this.pointSelection.set = this.parent.set()),
+                this.drawCircles(),
+                this)
+          );
+        }),
+        (b.prototype.getPointArray = function () {
+          var a = this.el.bbox();
+          return this.el
+            .array()
+            .valueOf()
+            .map(function (b) {
+              return [b[0] - a.x, b[1] - a.y];
+            });
+        }),
+        (b.prototype.drawCircles = function () {
+          for (
+            var a = this, b = this.getPointArray(), c = 0, d = b.length;
+            d > c;
+            ++c
+          )
+            this.pointSelection.set.add(
+              this.nested
+                .circle(this.options.radius)
+                .center(b[c][0], b[c][1])
+                .addClass(this.options.classPoints)
+                .addClass(this.options.classPoints + "_point")
+                .mousedown(
+                  (function (b) {
+                    return function (c) {
+                      (c = c || window.event),
+                        c.preventDefault
+                          ? c.preventDefault()
+                          : (c.returnValue = !1),
+                        a.el.fire("point", {
+                          x: c.pageX,
+                          y: c.pageY,
+                          i: b,
+                          event: c,
+                        });
+                    };
+                  })(c)
+                )
+            );
+        }),
+        (b.prototype.updatePointSelection = function () {
+          var a = this.getPointArray();
+          this.pointSelection.set.each(function (b) {
+            (this.cx() !== a[b][0] || this.cy() !== a[b][1]) &&
+              this.center(a[b][0], a[b][1]);
+          });
+        }),
+        (b.prototype.updateRectSelection = function () {
+          var a = this.el.bbox();
+          this.rectSelection.set
+            .get(0)
+            .attr({ width: a.width, height: a.height }),
+            this.options.points &&
+              (this.rectSelection.set.get(2).center(a.width, 0),
+              this.rectSelection.set.get(3).center(a.width, a.height),
+              this.rectSelection.set.get(4).center(0, a.height),
+              this.rectSelection.set.get(5).center(a.width / 2, 0),
+              this.rectSelection.set.get(6).center(a.width, a.height / 2),
+              this.rectSelection.set.get(7).center(a.width / 2, a.height),
+              this.rectSelection.set.get(8).center(0, a.height / 2)),
+            this.options.rotationPoint &&
+              this.rectSelection.set.get(9).center(a.width / 2, 20);
+        }),
+        (b.prototype.selectRect = function (a) {
+          function b(a) {
+            return function (b) {
+              (b = b || window.event),
+                b.preventDefault ? b.preventDefault() : (b.returnValue = !1),
+                c.el.fire(a, { x: b.pageX, y: b.pageY, event: b });
+            };
+          }
+          var c = this,
+            d = this.el.bbox();
+          (this.rectSelection.isSelected = a),
+            (this.rectSelection.set =
+              this.rectSelection.set || this.parent.set()),
+            this.rectSelection.set.get(0) ||
+              this.rectSelection.set.add(
+                this.nested
+                  .rect(d.width, d.height)
+                  .addClass(this.options.classRect)
+              ),
+            this.options.points &&
+              !this.rectSelection.set.get(1) &&
+              (this.rectSelection.set.add(
+                this.nested
+                  .circle(this.options.radius)
+                  .center(0, 0)
+                  .attr("class", this.options.classPoints + "_lt")
+                  .mousedown(b("lt"))
+              ),
+              this.rectSelection.set.add(
+                this.nested
+                  .circle(this.options.radius)
+                  .center(d.width, 0)
+                  .attr("class", this.options.classPoints + "_rt")
+                  .mousedown(b("rt"))
+              ),
+              this.rectSelection.set.add(
+                this.nested
+                  .circle(this.options.radius)
+                  .center(d.width, d.height)
+                  .attr("class", this.options.classPoints + "_rb")
+                  .mousedown(b("rb"))
+              ),
+              this.rectSelection.set.add(
+                this.nested
+                  .circle(this.options.radius)
+                  .center(0, d.height)
+                  .attr("class", this.options.classPoints + "_lb")
+                  .mousedown(b("lb"))
+              ),
+              this.rectSelection.set.add(
+                this.nested
+                  .circle(this.options.radius)
+                  .center(d.width / 2, 0)
+                  .attr("class", this.options.classPoints + "_t")
+                  .mousedown(b("t"))
+              ),
+              this.rectSelection.set.add(
+                this.nested
+                  .circle(this.options.radius)
+                  .center(d.width, d.height / 2)
+                  .attr("class", this.options.classPoints + "_r")
+                  .mousedown(b("r"))
+              ),
+              this.rectSelection.set.add(
+                this.nested
+                  .circle(this.options.radius)
+                  .center(d.width / 2, d.height)
+                  .attr("class", this.options.classPoints + "_b")
+                  .mousedown(b("b"))
+              ),
+              this.rectSelection.set.add(
+                this.nested
+                  .circle(this.options.radius)
+                  .center(0, d.height / 2)
+                  .attr("class", this.options.classPoints + "_l")
+                  .mousedown(b("l"))
+              ),
+              this.rectSelection.set.each(function () {
+                this.addClass(c.options.classPoints);
+              })),
+            this.options.rotationPoint &&
+              !this.rectSelection.set.get(9) &&
+              this.rectSelection.set.add(
+                this.nested
+                  .circle(this.options.radius)
+                  .center(d.width / 2, 20)
+                  .attr("class", this.options.classPoints + "_rot")
+                  .mousedown(function (a) {
+                    (a = a || window.event),
+                      a.preventDefault
+                        ? a.preventDefault()
+                        : (a.returnValue = !1),
+                      c.el.fire("rot", { x: a.pageX, y: a.pageY, event: a });
+                  })
+              );
+        }),
+        (b.prototype.handler = function () {
+          var a = this.el.bbox();
+          this.nested
+            .size(a.width || 1, a.height || 1)
+            .transform(this.el.ctm())
+            .move(a.x, a.y),
+            this.rectSelection.isSelected && this.updateRectSelection(),
+            this.pointSelection.isSelected && this.updatePointSelection();
+        }),
+        (b.prototype.observe = function () {
+          var a = this;
+          if (MutationObserver)
+            if (this.rectSelection.isSelected || this.pointSelection.isSelected)
+              (this.observerInst =
+                this.observerInst ||
+                new MutationObserver(function () {
+                  a.handler();
+                })),
+                this.observerInst.observe(this.el.node, { attributes: !0 });
+            else
+              try {
+                this.observerInst.disconnect(), delete this.observerInst;
+              } catch (b) {}
+          else
+            this.el.off("DOMAttrModified.select"),
+              (this.rectSelection.isSelected ||
+                this.pointSelection.isSelected) &&
+                this.el.on("DOMAttrModified.select", function () {
+                  a.handler();
                 });
+        }),
+        (b.prototype.cleanup = function () {
+          !this.rectSelection.isSelected &&
+            this.rectSelection.set &&
+            (this.rectSelection.set.each(function () {
+              this.remove();
+            }),
+            this.rectSelection.set.clear(),
+            delete this.rectSelection.set),
+            !this.pointSelection.isSelected &&
+              this.pointSelection.set &&
+              (this.pointSelection.set.each(function () {
+                this.remove();
+              }),
+              this.pointSelection.set.clear(),
+              delete this.pointSelection.set),
+            this.pointSelection.isSelected ||
+              this.rectSelection.isSelected ||
+              (this.nested.remove(), delete this.nested);
+        }),
+        SVG.extend(SVG.Element, {
+          select: function (c, d) {
+            "object" == typeof c && ((d = c), (c = !0));
+            var e = this.remember("_selectHandler") || new b(this);
+            return e.init(c === a ? !0 : c, d || {}), this;
+          },
+        }),
+        (SVG.Element.prototype.select.defaults = {
+          points: !0,
+          classRect: "svg_select_boundingRect",
+          classPoints: "svg_select_points",
+          radius: 7,
+          rotationPoint: !0,
+          deepSelect: !1,
+        });
+    }).call(this);
+    (function () {
+      SVG.extend(SVG.Element, {
+        /**
+         * draggy
+         * Makes an element draggable.
+         *
+         * @name draggy
+         * @function
+         * @param {Object|Function} constraint An object containing the
+         * constraint values or a function which gets the `x` and `y` values
+         * and returns a boolean or an object containing the `x` and `y`
+         * boolean values.`false` skips moving while `true` allows it.
+         * @return {SVG} The SVG element.
+         */
+        draggy: function (constraint) {
+          var start,
+            drag,
+            end,
+            element = this;
+          // Remove draggable if already present
+          if (typeof this.fixed === "function") {
+            this.fixed();
+          }
+
+          // Ensure constraint object
+          constraint = constraint || {};
+
+          // Start dragging
+          start = function (event) {
+            var parent = null;
+            if (typeof this.parent === "function") {
+              parent = this.parent(SVG.Nested) || this.parent(SVG.Doc);
+            } else {
+              this.parent._parent(SVG.Nested) || this._parent(SVG.Doc);
+            }
+            event = event || window.event;
+
+            // Invoke any callbacks
+            if (element.beforedrag) {
+              element.beforedrag(event);
             }
 
-            function loadLevel(level) {
-                const levelData = levels[level - 1];
-                document.getElementById('currentLevel').textContent = level;
-                document.getElementById('targetName').textContent = levelData.name;
-                document.getElementById('progressFill').style.width = (level / 10) * 100 + '%';
+            // Get element bounding box
+            var box = element.bbox();
 
-                // Create target shape
-                const targetShape = document.getElementById('targetShape');
-                targetShape.innerHTML = `
-                    <svg width="200" height="200" viewBox="0 0 200 200">
-                        <path d="${levelData.target}" 
-                            fill="none" 
-                            stroke="#333" 
-                            stroke-width="3" 
-                            stroke-dasharray="5,5"/>
-                    </svg>
-                `;
-
-                // Reset pieces to original positions
-                resetLevel();
+            if (element instanceof SVG.G) {
+              box.x = element.x();
+              box.y = element.y();
+            } else if (element instanceof SVG.Nested) {
+              box = {
+                x: element.x(),
+                y: element.y(),
+                width: element.width(),
+                height: element.height(),
+              };
             }
 
-            function startDrag(e) {
-                e.preventDefault();
-                selectedPiece = e.currentTarget;
-                isDragging = true;
-                selectedPiece.classList.add('dragging');
+            // Store event
+            element.startEvent = event;
 
-                const rect = selectedPiece.getBoundingClientRect();
-                dragOffset.x = e.clientX - rect.left;
-                dragOffset.y = e.clientY - rect.top;
+            // Store start position
+            element.startPosition = {
+              x: box.x,
+              y: box.y,
+              width: box.width,
+              height: box.height,
+              zoom: parent.viewbox().zoom,
+              rotation: (element.transform("rotation") * Math.PI) / 180,
+            };
 
-                document.addEventListener('mousemove', drag);
-                document.addEventListener('mouseup', stopDrag);
+            // Add while and end events to window
+            SVG.on(window, "mousemove", drag);
+            SVG.on(window, "touchmove", drag);
+
+            SVG.on(window, "mouseup", end);
+            SVG.on(window, "touchend", end);
+
+            // Invoke any callbacks
+            element.node.dispatchEvent(
+              new CustomEvent("dragstart", {
+                detail: {
+                  event: event,
+                  delta: {
+                    x: 0,
+                    y: 0,
+                  },
+                },
+              })
+            );
+
+            // Prevent selection dragging
+            if (event.preventDefault) {
+              event.preventDefault();
+            } else {
+              event.returnValue = false;
             }
+          };
 
-            function drag(e) {
-                if (!isDragging || !selectedPiece) return;
-
-                const puzzleArea = document.getElementById('puzzleArea');
-                const puzzleRect = puzzleArea.getBoundingClientRect();
-
-                selectedPiece.style.position = 'absolute';
-                selectedPiece.style.left = (e.clientX - dragOffset.x) + 'px';
-                selectedPiece.style.top = (e.clientY - dragOffset.y) + 'px';
-                selectedPiece.style.zIndex = '30';
+          function elmZoom(elm) {
+            if (!elm || typeof elm.transform !== "function") {
+              return { x: 1, y: 1 };
             }
+            var p = elm.parent;
+            var t = elm.transform();
+            pz = {};
+            var pz = elmZoom(p);
+            return {
+              x: t.scaleX * pz.x,
+              y: t.scaleY * pz.y,
+            };
+          }
 
-            function stopDrag(e) {
-                if (!isDragging) return;
+          // While dragging
+          drag = function (event) {
+            event = event || window.event;
 
-                const puzzleArea = document.getElementById('puzzleArea');
-                const puzzleRect = puzzleArea.getBoundingClientRect();
-                const pieceRect = selectedPiece.getBoundingClientRect();
+            if (element.startEvent) {
+              // Calculate move position
+              var x,
+                y,
+                rotation = element.startPosition.rotation,
+                width = element.startPosition.width,
+                height = element.startPosition.height,
+                delta = {
+                  x: event.pageX - element.startEvent.pageX,
+                  y: event.pageY - element.startEvent.pageY,
+                };
+              if (/^touchstart|touchmove$/.test(event.type)) {
+                delta.x =
+                  event.touches[0].pageX - element.startEvent.touches[0].pageX;
+                delta.y =
+                  event.touches[0].pageY - element.startEvent.touches[0].pageY;
+              } else if (/^click|mousedown|mousemove$/.test(event.type)) {
+                delta.x = event.pageX - element.startEvent.pageX;
+                delta.y = event.pageY - element.startEvent.pageY;
+              }
 
-                // Check if piece is dropped in puzzle area
-                if (pieceRect.left >= puzzleRect.left && 
-                    pieceRect.right <= puzzleRect.right &&
-                    pieceRect.top >= puzzleRect.top && 
-                    pieceRect.bottom <= puzzleRect.bottom) {
-                    
-                    // Convert to puzzle area coordinates
-                    const relativeX = pieceRect.left - puzzleRect.left;
-                    const relativeY = pieceRect.top - puzzleRect.top;
-                    
-                    selectedPiece.style.left = relativeX + 'px';
-                    selectedPiece.style.top = relativeY + 'px';
-                    
-                    puzzleArea.appendChild(selectedPiece);
-                    
-                    // Check if level is complete
-                    setTimeout(checkLevelComplete, 100);
-                }
+              delta.scale = elmZoom(element);
 
-                selectedPiece.classList.remove('dragging');
-                selectedPiece = null;
-                isDragging = false;
+              x =
+                element.startPosition.x +
+                (delta.x * Math.cos(rotation) + delta.y * Math.sin(rotation)) /
+                  Math.pow(delta.scale.x, 2);
+              y =
+                element.startPosition.y +
+                (delta.y * Math.cos(rotation) + delta.x * Math.sin(-rotation)) /
+                  Math.pow(delta.scale.y, 2);
 
-                document.removeEventListener('mousemove', drag);
-                document.removeEventListener('mouseup', stopDrag);
-            }
+              // Move the element to its new position, if possible by constraint
+              if (typeof constraint === "function") {
+                var coord = constraint(x, y);
+                if (typeof coord === "object") {
+                  if (typeof coord.x !== "boolean" || coord.x) {
+                    x = typeof coord.x === "number" ? coord.x : x;
+                    element.x(x);
+                  } else {
+                    x = element.x();
+                  }
 
-            function rotatePiece(e) {
-                e.preventDefault();
-                const piece = e.currentTarget;
-                const svg = piece.querySelector('svg');
-                
-                // Get current rotation or default to 0
-                let currentRotation = parseInt(piece.dataset.rotation || '0');
-                currentRotation = (currentRotation + 45) % 360;
-                piece.dataset.rotation = currentRotation;
-                
-                svg.style.transform = `rotate(${currentRotation}deg)`;
-                svg.style.transition = 'transform 0.3s ease';
-            }
-
-            function checkLevelComplete() {
-                const puzzleArea = document.getElementById('puzzleArea');
-                const piecesInPuzzle = puzzleArea.querySelectorAll('.tangram-piece');
-                
-                // Simple completion check - if all 7 pieces are in puzzle area
-                if (piecesInPuzzle.length === 7) {
-                    showLevelComplete();
-                }
-            }
-
-            function showLevelComplete() {
-                const modal = document.getElementById('levelComplete');
-                const message = document.getElementById('completeMessage');
-                
-                if (currentLevel === 10) {
-                    message.textContent = '🎊 Congratulations! You\'ve completed all levels!';
+                  if (typeof coord.y !== "boolean" || coord.y) {
+                    y = typeof coord.y === "number" ? coord.y : y;
+                    element.y(y);
+                  } else {
+                    y = element.y();
+                  }
+                } else if (typeof coord === "boolean" && coord) {
+                  element.move(x, y);
                 } else {
-                    message.textContent = `Great job! Level ${currentLevel} completed!`;
+                  x = element.x();
+                  y = element.y();
                 }
-                
-                modal.style.display = 'flex';
-                document.getElementById('nextBtn').style.display = 'inline-block';
-            }
-
-            function continueGame() {
-                document.getElementById('levelComplete').style.display = 'none';
-                if (currentLevel < 10) {
-                    nextLevel();
-                } else {
-                    // Game completed
-                    alert('🎉 Congratulations! You\'ve mastered all Tangram puzzles!');
-                    currentLevel = 1;
-                    loadLevel(currentLevel);
+              } else if (typeof constraint === "object") {
+                // Keep element within constrained box
+                if (constraint.minX !== null && x < constraint.minX) {
+                  x = constraint.minX;
+                } else if (
+                  constraint.maxX !== null &&
+                  x > constraint.maxX - width
+                ) {
+                  x = constraint.maxX - width;
                 }
-            }
 
-            function nextLevel() {
-                if (currentLevel < 10) {
-                    currentLevel++;
-                    loadLevel(currentLevel);
-                    document.getElementById('nextBtn').style.display = 'none';
+                if (constraint.minY !== null && y < constraint.minY) {
+                  y = constraint.minY;
+                } else if (
+                  constraint.maxY !== null &&
+                  y > constraint.maxY - height
+                ) {
+                  y = constraint.maxY - height;
                 }
+
+                element.move(x, y);
+              }
+
+              // Calculate the total movement
+              delta.movedX = x - element.startPosition.x;
+              delta.movedY = y - element.startPosition.y;
+
+              // Invoke any callbacks
+              element.node.dispatchEvent(
+                new CustomEvent("dragmove", {
+                  detail: {
+                    delta: delta,
+                    event: event,
+                  },
+                })
+              );
+            }
+          };
+
+          // When dragging ends
+          end = function (event) {
+            event = event || window.event;
+
+            // Calculate move position
+            var delta = {
+              x: event.pageX - element.startEvent.pageX,
+              y: event.pageY - element.startEvent.pageY,
+              zoom: element.startPosition.zoom,
+            };
+
+            // Reset store
+            element.startEvent = null;
+            element.startPosition = null;
+
+            // Remove while and end events to window
+            SVG.off(window, "mousemove", drag);
+            SVG.off(window, "touchmove", drag);
+            SVG.off(window, "mouseup", end);
+            SVG.off(window, "touchend", end);
+
+            // Invoke any callbacks
+            element.node.dispatchEvent(
+              new CustomEvent("dragend", {
+                detail: {
+                  delta: {
+                    x: 0,
+                    y: 0,
+                  },
+                  event: event,
+                },
+              })
+            );
+          };
+
+          // Bind mousedown event
+          element.on("mousedown", start);
+          element.on("touchstart", start);
+
+          // Disable draggable
+          element.fixed = function () {
+            element.off("mousedown", start);
+            element.off("touchstart", start);
+
+            SVG.off(window, "mousemove", drag);
+            SVG.off(window, "touchmove", drag);
+            SVG.off(window, "mouseup", end);
+            SVG.off(window, "touchend", end);
+
+            start = drag = end = null;
+
+            return element;
+          };
+
+          return this;
+        },
+      });
+    }).call(this);
+
+    (function (f) {
+      if (typeof exports === "object" && typeof module !== "undefined") {
+        module.exports = f();
+      } else if (typeof define === "function" && define.amd) {
+        define([], f);
+      } else {
+        var g;
+        if (typeof window !== "undefined") {
+          g = window;
+        } else if (typeof global !== "undefined") {
+          g = global;
+        } else if (typeof self !== "undefined") {
+          g = self;
+        } else {
+          g = this;
+        }
+        g.CSSRotate = f();
+      }
+    })(function () {
+      var define, module, exports;
+      return (function e(t, n, r) {
+        function s(o, u) {
+          if (!n[o]) {
+            if (!t[o]) {
+              var a = typeof require == "function" && require;
+              if (!u && a) return a(o, !0);
+              if (i) return i(o, !0);
+              var f = new Error("Cannot find module '" + o + "'");
+              throw ((f.code = "MODULE_NOT_FOUND"), f);
+            }
+            var l = (n[o] = { exports: {} });
+            t[o][0].call(
+              l.exports,
+              function (e) {
+                var n = t[o][1][e];
+                return s(n ? n : e);
+              },
+              l,
+              l.exports,
+              e,
+              t,
+              n,
+              r
+            );
+          }
+          return n[o].exports;
+        }
+        var i = typeof require == "function" && require;
+        for (var o = 0; o < r.length; o++) s(r[o]);
+        return s;
+      })(
+        {
+          1: [
+            function (require, module, exports) {
+              var CSSTransform = require("cross-transform");
+              function CSSRotate(elm, angle) {
+                return CSSTransform(elm, "rotate(" + angle + "deg)");
+              }
+              module.exports = CSSRotate;
+            },
+            { "cross-transform": 2 },
+          ],
+          2: [
+            function (require, module, exports) {
+              var Crossy = require("crossy");
+              function CSSCrossTransform(elm, value) {
+                return Crossy(elm, "transform", value);
+              }
+              module.exports = CSSCrossTransform;
+            },
+            { crossy: 4 },
+          ],
+          3: [
+            function (require, module, exports) {
+              var UFirst = require("ucfirst");
+              function CrossStyle(input) {
+                var uInput = UFirst(input);
+                return [
+                  "webkit" + uInput,
+                  "moz" + uInput,
+                  "ms" + uInput,
+                  "o" + uInput,
+                  input,
+                ];
+              }
+              module.exports = CrossStyle;
+            },
+            { ucfirst: 6 },
+          ],
+          4: [
+            function (require, module, exports) {
+              var ElmSelect = require("elm-select"),
+                CrossStyle = require("cross-style");
+              function Crossy(elm, prop, value) {
+                if (typeof elm === "string") {
+                  return ElmSelect(elm, Crossy, [prop, value]);
+                }
+                var i = 0,
+                  styles = CrossStyle(prop);
+                for (; i < styles.length; ++i) {
+                  elm.style[styles[i]] = value;
+                }
+                return elm;
+              }
+              module.exports = Crossy;
+            },
+            { "cross-style": 3, "elm-select": 5 },
+          ],
+          5: [
+            function (require, module, exports) {
+              function ElmSelect(elm, fn, args) {
+                var i = 0,
+                  _args = null;
+                if (typeof elm === "string") {
+                  elm = document.querySelectorAll(elm);
+                }
+                if (elm.constructor !== NodeList) {
+                  elm = [elm];
+                }
+                if (typeof fn === "function") {
+                  if (!Array.isArray(args)) {
+                    args = [args];
+                  }
+                  for (; i < elm.length; ++i) {
+                    _args = [elm[i]].concat(args);
+                    fn.apply(this, _args);
+                  }
+                }
+                return elm;
+              }
+              module.exports = ElmSelect;
+            },
+            {},
+          ],
+          6: [
+            function (require, module, exports) {
+              "use strict";
+              module.exports = function (s) {
+                return s.substr(0, 1).toUpperCase() + s.substring(1);
+              };
+            },
+            {},
+          ],
+        },
+        {},
+        [1]
+      )(1);
+    });
+    (function (f) {
+      if (typeof exports === "object" && typeof module !== "undefined") {
+        module.exports = f();
+      } else if (typeof define === "function" && define.amd) {
+        define([], f);
+      } else {
+        var g;
+        if (typeof window !== "undefined") {
+          g = window;
+        } else if (typeof global !== "undefined") {
+          g = global;
+        } else if (typeof self !== "undefined") {
+          g = self;
+        } else {
+          g = this;
+        }
+        g.Crossy = f();
+      }
+    })(function () {
+      var define, module, exports;
+      return (function e(t, n, r) {
+        function s(o, u) {
+          if (!n[o]) {
+            if (!t[o]) {
+              var a = typeof require == "function" && require;
+              if (!u && a) return a(o, !0);
+              if (i) return i(o, !0);
+              var f = new Error("Cannot find module '" + o + "'");
+              throw ((f.code = "MODULE_NOT_FOUND"), f);
+            }
+            var l = (n[o] = { exports: {} });
+            t[o][0].call(
+              l.exports,
+              function (e) {
+                var n = t[o][1][e];
+                return s(n ? n : e);
+              },
+              l,
+              l.exports,
+              e,
+              t,
+              n,
+              r
+            );
+          }
+          return n[o].exports;
+        }
+        var i = typeof require == "function" && require;
+        for (var o = 0; o < r.length; o++) s(r[o]);
+        return s;
+      })(
+        {
+          1: [
+            function (require, module, exports) {
+              var UFirst = require("ucfirst");
+              function CrossStyle(input) {
+                var uInput = UFirst(input);
+                return [
+                  "webkit" + uInput,
+                  "moz" + uInput,
+                  "ms" + uInput,
+                  "o" + uInput,
+                  input,
+                ];
+              }
+              module.exports = CrossStyle;
+            },
+            { ucfirst: 4 },
+          ],
+          2: [
+            function (require, module, exports) {
+              var ElmSelect = require("elm-select"),
+                CrossStyle = require("cross-style");
+              function Crossy(elm, prop, value) {
+                if (typeof elm === "string") {
+                  return ElmSelect(elm, Crossy, [prop, value]);
+                }
+                var i = 0,
+                  styles = CrossStyle(prop);
+                for (; i < styles.length; ++i) {
+                  elm.style[styles[i]] = value;
+                }
+                return elm;
+              }
+              module.exports = Crossy;
+            },
+            { "cross-style": 1, "elm-select": 3 },
+          ],
+          3: [
+            function (require, module, exports) {
+              function ElmSelect(elm, fn, args) {
+                var i = 0,
+                  _args = null;
+                if (typeof elm === "string") {
+                  elm = document.querySelectorAll(elm);
+                }
+                if (elm.constructor !== NodeList) {
+                  elm = [elm];
+                }
+                if (typeof fn === "function") {
+                  if (!Array.isArray(args)) {
+                    args = [args];
+                  }
+                  for (; i < elm.length; ++i) {
+                    _args = [elm[i]].concat(args);
+                    fn.apply(this, _args);
+                  }
+                }
+                return elm;
+              }
+              module.exports = ElmSelect;
+            },
+            {},
+          ],
+          4: [
+            function (require, module, exports) {
+              "use strict";
+              module.exports = function (s) {
+                return s.substr(0, 1).toUpperCase() + s.substring(1);
+              };
+            },
+            {},
+          ],
+        },
+        {},
+        [2]
+      )(2);
+    });
+
+    window.showTutorial = function () {
+      swal({
+        title: "Tutorial",
+        html: true,
+        confirmButtonText: "Mengerti!",
+        text:
+          "<ul>" +
+    "    <li><strong>Klik kiri</strong>: putar ke kiri</li>" +
+    "    <li><strong>Klik kanan</strong>: putar ke kanan</li>" +
+    "    <li><strong>CTRL + klik kiri</strong>: balik bentuk</li>" +
+    "    <li><strong>Tahan klik kiri + gerakkan</strong>: geser</li>" +
+    "</ul>" +
+    "<div class='made-with-heart'>",
+      });
+    };
+    window.addEventListener("load", function () {
+      var t = new SVG(document.querySelector(".graph")).size("100%", "100%"),
+        winSize = {
+          w: window.innerWidth,
+          h: window.innerHeight,
+        },
+        elements = t.group().id("elements"),
+        shapes = [
+          elements.group(),
+          elements.group(),
+          elements.group(),
+          elements.group(),
+          elements.group(),
+          elements.group(),
+          elements.group(),
+        ],
+        size = winSize.w / 3.5,
+        half = size / 2,
+        quart = half / 2,
+        q3 = quart * 3,
+        leftTopCorner = {
+          x: winSize.w / 2 - size / 2,
+          y: 30,
+        };
+      // 1. Big Triangle
+      shapes[0]
+        .polygon("0,0 " + half + "," + half + " " + size + ",0")
+        .fill("#e74c3c");
+
+      // 2. Big Triangle
+      shapes[1]
+        .polygon("0,0 " + half + "," + half + " 0," + size)
+        .fill("#e67e22");
+
+      // 3. Medium Triangle
+      shapes[2]
+        .polygon(
+          size + "," + size + " " + half + "," + size + " " + size + "," + half
+        )
+        .fill("#f1c40f");
+
+      // 4. Small Triangle
+      shapes[3]
+        .polygon(size + ",0 " + q3 + "," + quart + " " + size + "," + half)
+        .fill("#2ecc71");
+
+      // 5. Small Triangle
+      shapes[4]
+        .polygon(
+          half + "," + half + " " + quart + "," + q3 + " " + q3 + "," + q3
+        )
+        .fill("#3498db");
+
+      // 6. Square
+      shapes[5]
+        .polygon(
+          half +
+            "," +
+            half +
+            " " +
+            q3 +
+            "," +
+            q3 +
+            " " +
+            size +
+            "," +
+            half +
+            " " +
+            q3 +
+            "," +
+            quart
+        )
+        .fill("#9b59b6");
+
+      // 7. Parallelogram
+      shapes[6]
+        .polygon(
+          "0," +
+            size +
+            " " +
+            quart +
+            "," +
+            q3 +
+            " " +
+            q3 +
+            "," +
+            q3 +
+            " " +
+            half +
+            "," +
+            size
+        )
+        .fill("#34495e");
+
+      Crossy("polygon", "transformOrigin", "center");
+      Crossy("polygon", "transformBox", "fill-box");
+      Crossy("polygon", "transition", "all 500 ease");
+
+      shapes.forEach(function (c) {
+        var moved = false;
+        var angle = 0;
+        var cPol = c.children()[0];
+        c.translate(leftTopCorner.x, leftTopCorner.y);
+        c.draggy();
+        c.on("dragmove", function () {
+          moved = true;
+        });
+
+        cPol.on("mousedown", function () {
+          moved = false;
+        });
+
+        cPol.on("contextmenu", function (e) {
+          e.preventDefault();
+        });
+
+        cPol.on("mouseup", function (e) {
+          if (!moved) {
+            var t = this.node.style.transform;
+
+            if (e.ctrlKey) {
+              this.node._scale = (this.node._scale || 1) === 1 ? -1 : 1;
+            } else {
+              angle += (e.button === 2 ? 1 : -1) * 45;
             }
 
-            function resetLevel() {
-                const piecesContainer = document.getElementById('piecesContainer');
-                const puzzleArea = document.getElementById('puzzleArea');
-                
-                // Move all pieces back to pieces container
-                const allPieces = document.querySelectorAll('.tangram-piece');
-                allPieces.forEach(piece => {
-                    piece.style.position = 'relative';
-                    piece.style.left = 'auto';
-                    piece.style.top = 'auto';
-                    piece.style.zIndex = '10';
-                    piece.dataset.rotation = '0';
-                    piece.querySelector('svg').style.transform = 'rotate(0deg)';
-                    piece.classList.remove('placed', 'dragging');
-                    piecesContainer.appendChild(piece);
-                });
-                
-                document.getElementById('nextBtn').style.display = 'none';
-            }
-
-            function showHint() {
-                alert('💡 Hint: Try rotating pieces with right-click and look for matching edges and corners!');
-            }
-            
-            // Initialize game when page loads
-            window.addEventListener('load', initGame);
-
-            // Prevent default drag behavior on images
-            document.addEventListener('dragstart', e => e.preventDefault());
-        </script>
-    </body>
-    </html>
+            Crossy(
+              this.node,
+              "transform",
+              "rotate(" + angle + "deg) scaleX(" + (this.node._scale || 1) + ")"
+            );
+          }
+          moved = false;
+          e.preventDefault();
+        });
+      });
+    });
+  </script>
+</html>
