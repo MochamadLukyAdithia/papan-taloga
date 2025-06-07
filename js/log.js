@@ -87,12 +87,32 @@
         }
       };
 
+      function getResponsiveClasses() {
+        if (window.innerWidth <= 640) {
+          return {
+            cellClass: "mobile-grid-cell w-7 h-7 flex items-center justify-center text-sm font-bold rounded-lg",
+            fontSize: "14px"
+          };
+        } else if (window.innerWidth <= 1024) {
+          return {
+            cellClass: "tablet-grid-cell w-8 h-8 flex items-center justify-center text-base font-bold rounded-lg",
+            fontSize: "16px"
+          };
+        } else {
+          return {
+            cellClass: "w-10 h-10 flex items-center justify-center text-lg font-bold rounded-lg",
+            fontSize: "18px"
+          };
+        }
+      }
+
       function createGrid() {
         const fragment = document.createDocumentFragment();
+        const responsive = getResponsiveClasses();
         
         for (let i = 0; i < gridSize * gridSize; i++) {
           const cell = document.createElement("div");
-          cell.className = "grid-cell w-10 h-10 flex items-center justify-center text-lg font-bold rounded-lg";
+          cell.className = `grid-cell ${responsive.cellClass}`;
           cell.dataset.index = i;
           
           cell.addEventListener("click", handleCellClick);
@@ -105,6 +125,11 @@
         
         grid.innerHTML = "";
         grid.appendChild(fragment);
+        
+        // Update grid gap based on screen size
+        if (window.innerWidth <= 640) {
+          grid.classList.add("mobile-grid");
+        }
       }
 
       function createDeck() {
@@ -161,7 +186,7 @@
           });
 
           const countLabel = document.createElement("div");
-          countLabel.className = "text-sm font-bold text-white mt-2 glass-morphism px-3 py-1 rounded-full";
+          countLabel.className = "text-xs sm:text-sm font-bold text-white mt-1 sm:mt-2 glass-morphism px-2 sm:px-3 py-1 rounded-full";
           countLabel.textContent = `×${cardCounts[i]}`;
           countLabel.id = `count-${i}`;
 
@@ -238,17 +263,18 @@
       function clearGrid() {
         const cells = document.querySelectorAll("#grid .grid-cell");
         cells.forEach((cell) => {
+          const number = parseInt(cell.textContent);
+          if (!isNaN(number)) {
+            cardCounts[number]++;
+          }
           cell.textContent = "";
-          cell.classList.remove("filled", ...cell.classList);
-          cell.classList.add("grid-cell", "w-10", "h-10", "flex", "items-center", "justify-center", "text-lg", "font-bold", "rounded-lg");
+          cell.classList.remove("filled", "filled-2", "filled-3", "filled-4", "filled-5", "filled-6", "filled-7", "filled-8", "filled-9");
         });
 
         selectedCard = null;
         document.querySelectorAll(".card-selected").forEach((c) => c.classList.remove("card-selected"));
 
-        // Reset card counts and recreate deck
-        resetCardCounts();
-        createDeck();
+        // Update card displays
         for (let i = 2; i <= 9; i++) {
           updateCardDisplay(i);
         }
@@ -275,7 +301,71 @@
         }
       }
 
+      // Handle window resize
+      function handleResize() {
+        createGrid();
+      }
+
+      // Add touch support for mobile devices
+      function addTouchSupport() {
+        let touchStartX, touchStartY;
+        let touchElement = null;
+
+        document.addEventListener('touchstart', (e) => {
+          if (e.target.classList.contains('card') && e.target.parentNode.style.opacity !== "0.3") {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchElement = e.target;
+            e.preventDefault();
+          }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+          if (touchElement) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Remove previous drop targets
+            document.querySelectorAll('.drop-target').forEach(el => {
+              el.classList.remove('drop-target');
+            });
+            
+            // Add drop target if over grid cell
+            if (elementBelow && elementBelow.classList.contains('grid-cell') && elementBelow.textContent === "") {
+              elementBelow.classList.add('drop-target');
+            }
+          }
+        });
+
+        document.addEventListener('touchend', (e) => {
+          if (touchElement) {
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Remove all drop targets
+            document.querySelectorAll('.drop-target').forEach(el => {
+              el.classList.remove('drop-target');
+            });
+            
+            if (elementBelow && elementBelow.classList.contains('grid-cell') && elementBelow.textContent === "") {
+              const cardNumber = parseInt(touchElement.getAttribute('data-number'));
+              if (cardCounts[cardNumber] > 0) {
+                elementBelow.textContent = cardNumber;
+                elementBelow.classList.add("filled", `filled-${cardNumber}`);
+                cardCounts[cardNumber]--;
+                updateCardDisplay(cardNumber);
+              }
+            }
+            
+            touchElement = null;
+          }
+        });
+      }
+
       // Initialize game
+      window.addEventListener('resize', handleResize);
+      addTouchSupport();
       updateSoal();
       createGrid();
       createDeck();
@@ -283,3 +373,14 @@
       for (let i = 2; i <= 9; i++) {
         updateCardDisplay(i);
       }
+      document.querySelectorAll(".card-stack").forEach((stack) => {
+        stack.addEventListener("dragover", (e) => e.preventDefault());
+        stack.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const cardNumber = parseInt(e.dataTransfer.getData("text/plain"));
+          if (cardCounts[cardNumber] > 0) {
+            selectedCard = cardNumber;
+            stack.children[0].classList.add("card-selected");
+          }
+        });
+      });
