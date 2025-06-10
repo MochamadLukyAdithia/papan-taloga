@@ -497,7 +497,14 @@
       // Variable untuk tracking tap/click behavior pada mobile
       var tapStartTime = 0;
       var tapStartPos = { x: 0, y: 0 };
-      var currentRotation = 0;
+      var isDragging = false;
+      var hasMoved = false;
+      var dragThreshold = 5; // minimum pixel movement untuk dianggap drag
+      
+      // Initialize rotation jika belum ada
+      if (!element._currentRotation) {
+        element._currentRotation = 0;
+      }
       
       // Remove draggable if already present
       if (typeof this.fixed === "function") {
@@ -517,6 +524,10 @@
         }
         event = event || window.event;
 
+        // Reset flags
+        isDragging = false;
+        hasMoved = false;
+
         // Track tap start time dan position untuk mobile
         if (event.type === 'touchstart') {
           tapStartTime = Date.now();
@@ -529,39 +540,27 @@
           element.beforedrag(event);
         }
 
-        // Get element bounding box
-        var box = element.bbox();
-
-        if (element instanceof SVG.G) {
-          box.x = element.x();
-          box.y = element.y();
-        } else if (element instanceof SVG.Nested) {
-          box = {
-            x: element.x(),
-            y: element.y(),
-            width: element.width(),
-            height: element.height(),
-          };
-        }
+        // Get element position langsung tanpa bbox untuk lebih stabil
+        var currentX = element.x();
+        var currentY = element.y();
+        var currentW = element.width ? element.width() : element.bbox().width;
+        var currentH = element.height ? element.height() : element.bbox().height;
 
         // Store event
         element.startEvent = event;
 
-        // Store start position
+        // Store start position dengan data yang lebih sederhana
         element.startPosition = {
-          x: box.x,
-          y: box.y,
-          width: box.width,
-          height: box.height,
-          zoom: parent.viewbox().zoom,
-          rotation: (element.transform("rotation") * Math.PI) / 180,
+          x: currentX,
+          y: currentY,
+          width: currentW,
+          height: currentH,
+          zoom: parent ? parent.viewbox().zoom : 1,
         };
 
         // Add while and end events to window
-        element.on("touchstart", start);
         SVG.on(window, "mousemove", drag);
         SVG.on(window, "touchmove", drag);
-
         SVG.on(window, "mouseup", end);
         SVG.on(window, "touchend", end);
 
@@ -590,13 +589,14 @@
         if (!elm || typeof elm.transform !== "function") {
           return { x: 1, y: 1 };
         }
-        var p = elm.parent;
+        var parent = elm.parent();
+        if (!parent) return { x: 1, y: 1 };
+        
         var t = elm.transform();
-        pz = {};
-        var pz = elmZoom(p);
+        var pz = elmZoom(parent);
         return {
-          x: t.scaleX * pz.x,
-          y: t.scaleY * pz.y,
+          x: (t.scaleX || 1) * pz.x,
+          y: (t.scaleY || 1) * pz.y,
         };
       }
 
@@ -604,97 +604,80 @@
       drag = function (event) {
         event = event || window.event;
 
-        if (element.startEvent) {
-          // Calculate move position
-          var x,
-            y,
-            rotation = element.startPosition.rotation,
-            width = element.startPosition.width,
-            height = element.startPosition.height,
-            delta = {
-              x: event.pageX - element.startEvent.pageX,
-              y: event.pageY - element.startEvent.pageY,
-            };
-          if (/^touchstart|touchmove|click$/.test(event.type)) {
-            delta.x =
-              event.touches[0].pageX - element.startEvent.touches[0].pageX;
-            delta.y =
-              event.touches[0].pageY - element.startEvent.touches[0].pageY;
-          } else if (/^click|mousedown|mousemove$/.test(event.type)) {
-            delta.x = event.pageX - element.startEvent.pageX;
-            delta.y = event.pageY - element.startEvent.pageY;
+        if (element.startEvent && element.startPosition) {
+          // Calculate raw delta movement
+          var deltaX = 0, deltaY = 0;
+
+          if (/^touchmove/.test(event.type)) {
+            deltaX = event.touches[0].pageX - element.startEvent.touches[0].pageX;
+            deltaY = event.touches[0].pageY - element.startEvent.touches[0].pageY;
+          } else if (/^mousemove$/.test(event.type)) {
+            deltaX = event.pageX - element.startEvent.pageX;
+            deltaY = event.pageY - element.startEvent.pageY;
           }
 
-          delta.scale = elmZoom(element);
-
-          x =
-            element.startPosition.x +
-            (delta.x * Math.cos(rotation) + delta.y * Math.sin(rotation)) /
-              Math.pow(delta.scale.x, 2);
-          y =
-            element.startPosition.y +
-            (delta.y * Math.cos(rotation) + delta.x * Math.sin(-rotation)) /
-              Math.pow(delta.scale.y, 2);
-
-          // Move the element to its new position, if possible by constraint
-          if (typeof constraint === "function") {
-            var coord = constraint(x, y);
-            if (typeof coord === "object") {
-              if (typeof coord.x !== "boolean" || coord.x) {
-                x = typeof coord.x === "number" ? coord.x : x;
-                element.x(x);
-              } else {
-                x = element.x();
-              }
-
-              if (typeof coord.y !== "boolean" || coord.y) {
-                y = typeof coord.y === "number" ? coord.y : y;
-                element.y(y);
-              } else {
-                y = element.y();
-              }
-            } else if (typeof coord === "boolean" && coord) {
-              element.move(x, y);
-            } else {
-              x = element.x();
-              y = element.y();
-            }
-          } else if (typeof constraint === "object") {
-            // Keep element within constrained box
-            if (constraint.minX !== null && x < constraint.minX) {
-              x = constraint.minX;
-            } else if (
-              constraint.maxX !== null &&
-              x > constraint.maxX - width
-            ) {
-              x = constraint.maxX - width;
-            }
-
-            if (constraint.minY !== null && y < constraint.minY) {
-              y = constraint.minY;
-            } else if (
-              constraint.maxY !== null &&
-              y > constraint.maxY - height
-            ) {
-              y = constraint.maxY - height;
-            }
-
-            element.move(x, y);
+          // Check if movement is significant enough to be drag
+          var totalMovement = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          if (totalMovement > dragThreshold) {
+            isDragging = true;
+            hasMoved = true;
           }
 
-          // Calculate the total movement
-          delta.movedX = x - element.startPosition.x;
-          delta.movedY = y - element.startPosition.y;
+          if (isDragging) {
+            // Get zoom scale
+            var scale = elmZoom(element);
+            
+            // Calculate new position - langsung tanpa rotasi kompleks
+            var newX = element.startPosition.x + (deltaX / scale.x);
+            var newY = element.startPosition.y + (deltaY / scale.y);
 
-          // Invoke any callbacks
-          element.node.dispatchEvent(
-            new CustomEvent("dragmove", {
-              detail: {
-                delta: delta,
-                event: event,
-              },
-            })
-          );
+            // Apply constraints if any
+            if (typeof constraint === "function") {
+              var coord = constraint(newX, newY);
+              if (typeof coord === "object") {
+                if (typeof coord.x !== "boolean" || coord.x) {
+                  newX = typeof coord.x === "number" ? coord.x : newX;
+                }
+                if (typeof coord.y !== "boolean" || coord.y) {
+                  newY = typeof coord.y === "number" ? coord.y : newY;
+                }
+              } else if (typeof coord === "boolean" && !coord) {
+                newX = element.x();
+                newY = element.y();
+              }
+            } else if (typeof constraint === "object") {
+              // Keep element within constrained box
+              if (constraint.minX !== null && newX < constraint.minX) {
+                newX = constraint.minX;
+              } else if (constraint.maxX !== null && newX > constraint.maxX - element.startPosition.width) {
+                newX = constraint.maxX - element.startPosition.width;
+              }
+
+              if (constraint.minY !== null && newY < constraint.minY) {
+                newY = constraint.minY;
+              } else if (constraint.maxY !== null && newY > constraint.maxY - element.startPosition.height) {
+                newY = constraint.maxY - element.startPosition.height;
+              }
+            }
+
+            // Move element ke posisi baru
+            element.move(newX, newY);
+
+            // Dispatch drag move event
+            element.node.dispatchEvent(
+              new CustomEvent("dragmove", {
+                detail: {
+                  delta: {
+                    x: deltaX,
+                    y: deltaY,
+                    movedX: newX - element.startPosition.x,
+                    movedY: newY - element.startPosition.y,
+                  },
+                  event: event,
+                },
+              })
+            );
+          }
         }
       };
 
@@ -702,36 +685,27 @@
       end = function (event) {
         event = event || window.event;
 
-        // Check jika ini adalah tap/click pada mobile (bukan drag)
-        if (event.type === 'touchend') {
+        // Check jika ini adalah tap pada mobile (bukan drag)
+        if (event.type === 'touchend' && !hasMoved) {
           var tapEndTime = Date.now();
           var tapDuration = tapEndTime - tapStartTime;
-          var tapEndPos = { 
-            x: event.changedTouches[0].pageX, 
-            y: event.changedTouches[0].pageY 
-          };
           
-          // Hitung jarak movement
-          var moveDistance = Math.sqrt(
-            Math.pow(tapEndPos.x - tapStartPos.x, 2) + 
-            Math.pow(tapEndPos.y - tapStartPos.y, 2)
-          );
-          
-          // Jika tap duration < 300ms dan movement < 10px, anggap sebagai tap untuk rotate
-          if (tapDuration < 300 && moveDistance < 10) {
+          // Jika tap duration < 300ms, anggap sebagai tap untuk rotate
+          if (tapDuration < 300) {
             // Rotate element 90 derajat
-            currentRotation += 90;
-            if (currentRotation >= 360) {
-              currentRotation = 0;
+            element._currentRotation += 90;
+            if (element._currentRotation >= 360) {
+              element._currentRotation = 0;
             }
             
-            // Apply rotation dengan center di tengah element
+            // Get center untuk rotation berdasarkan posisi saat ini
             var bbox = element.bbox();
             var centerX = bbox.x + bbox.width / 2;
             var centerY = bbox.y + bbox.height / 2;
             
+            // Apply rotation
             element.transform({
-              rotation: currentRotation,
+              rotation: element._currentRotation,
               cx: centerX,
               cy: centerY
             });
@@ -740,7 +714,7 @@
             element.node.dispatchEvent(
               new CustomEvent("elementrotate", {
                 detail: {
-                  rotation: currentRotation,
+                  rotation: element._currentRotation,
                   event: event,
                 },
               })
@@ -748,42 +722,46 @@
           }
         }
 
-        // Calculate move position
-        var delta = {
-          x: event.pageX - element.startEvent.pageX,
-          y: event.pageY - element.startEvent.pageY,
-          zoom: element.startPosition.zoom,
-        };
+        // Calculate final delta for dragend event
+        var finalDelta = { x: 0, y: 0 };
+        if (element.startEvent) {
+          if (event.type === 'touchend' && event.changedTouches.length > 0) {
+            finalDelta.x = event.changedTouches[0].pageX - element.startEvent.touches[0].pageX;
+            finalDelta.y = event.changedTouches[0].pageY - element.startEvent.touches[0].pageY;
+          } else if (event.type === 'mouseup') {
+            finalDelta.x = event.pageX - element.startEvent.pageX;
+            finalDelta.y = event.pageY - element.startEvent.pageY;
+          }
+        }
 
-        // Reset store
+        // Reset all states
         element.startEvent = null;
         element.startPosition = null;
+        isDragging = false;
+        hasMoved = false;
 
-        // Remove while and end events to window
+        // Remove event listeners
         SVG.off(window, "mousemove", drag);
         SVG.off(window, "touchmove", drag);
         SVG.off(window, "mouseup", end);
         SVG.off(window, "touchend", end);
 
-        // Invoke any callbacks
+        // Dispatch dragend event
         element.node.dispatchEvent(
           new CustomEvent("dragend", {
             detail: {
-              delta: {
-                x: 0,
-                y: 0,
-              },
+              delta: finalDelta,
               event: event,
             },
           })
         );
       };
 
-      // Bind mousedown event
+      // Bind start events
       element.on("mousedown", start);
       element.on("touchstart", start);
 
-      // Disable draggable
+      // Disable draggable function
       element.fixed = function () {
         element.off("mousedown", start);
         element.off("touchstart", start);
